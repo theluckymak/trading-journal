@@ -391,7 +391,7 @@ NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 
 ```bash
 # 1. Clone repository
-git clone <repo-url>
+git clone https://github.com/theluckymak/trading-journal.git
 cd trading-journal
 
 # 2. Setup backend
