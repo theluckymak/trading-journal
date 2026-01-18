@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/lib/api';
 import {
   TrendingUp,
@@ -10,10 +10,12 @@ import {
   Activity,
   PieChart,
   Plus,
-  Settings,
-  LogOut,
-  Moon,
-  Sun,
+  Eye,
+  Edit,
+  Trash2,
+  CheckCircle,
+  BarChart3,
+  Calendar,
 } from 'lucide-react';
 
 interface Analytics {
@@ -43,29 +45,26 @@ interface Trade {
   is_closed: boolean;
 }
 
-interface MT5Account {
-  id: number;
-  account_number: string;
-  account_name: string | null;
-  broker_name: string;
-  is_connected: boolean;
-  account_balance: string | null;
-  last_sync_at: string | null;
-}
-
 export default function Dashboard() {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [mt5Accounts, setMT5Accounts] = useState<MT5Account[]>([]);
   const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
+    }
+
+    // Check for success messages from URL params
+    if (router.query.deleted === 'true') {
+      setSuccessMessage('Trade deleted successfully');
+      setTimeout(() => setSuccessMessage(''), 5000);
+      // Clean up URL
+      router.replace('/dashboard', undefined, { shallow: true });
     }
 
     loadDashboardData();
@@ -74,15 +73,13 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [analyticsRes, tradesRes, mt5Res] = await Promise.all([
+      const [analyticsRes, tradesRes] = await Promise.all([
         apiClient.getAnalytics(),
         apiClient.getTrades({ limit: 10 }),
-        apiClient.getMT5Accounts(),
       ]);
 
       setAnalytics(analyticsRes);
       setTrades(tradesRes);
-      setMT5Accounts(mt5Res);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -90,9 +87,18 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this trade?')) return;
+
+    try {
+      await apiClient.deleteTrade(id);
+      setTrades(trades.filter((t) => t.id !== id));
+      setSuccessMessage('Trade deleted successfully');
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Failed to delete trade:', error);
+      alert('Failed to delete trade');
+    }
   };
 
   const formatCurrency = (value: number | null | undefined) => {
@@ -110,53 +116,35 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="h-12 w-12 text-blue-600 mx-auto animate-pulse" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <Activity className="h-12 w-12 text-blue-600 mx-auto animate-pulse" />
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trading Journal</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Welcome back, {user?.email}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={toggleTheme}
-                className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-              <button
-                onClick={() => router.push('/trades/new')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                <Plus className="h-4 w-4" />
-                New Trade
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            </div>
-          </div>
+    <Layout>
+      <div className="p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Welcome back, {user?.full_name || user?.email}!
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">Here's your trading overview</p>
         </div>
-      </header>
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2 animate-fade-in">
+            <CheckCircle className="h-5 w-5" />
+            {successMessage}
+          </div>
+        )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -220,50 +208,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* MT5 Accounts */}
-        {mt5Accounts.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-8">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">MT5 Accounts</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mt5Accounts.map((account) => (
-                  <div key={account.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {account.account_name || `Account ${account.account_number}`}
-                        </p>
-                        <p className="text-sm text-gray-600">{account.broker_name}</p>
-                      </div>
-                      <div
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          account.is_connected
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {account.is_connected ? 'Connected' : 'Disconnected'}
-                      </div>
-                    </div>
-                    {account.account_balance && (
-                      <p className="text-lg font-semibold text-gray-900">
-                        {formatCurrency(parseFloat(account.account_balance))}
-                      </p>
-                    )}
-                    {account.last_sync_at && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Last sync: {new Date(account.last_sync_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Recent Trades */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="px-6 py-4 border-b dark:border-gray-700">
@@ -273,89 +217,81 @@ export default function Dashboard() {
             <div className="p-12 text-center">
               <Activity className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No trades yet</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Start by adding your first trade or connecting an MT5 account</p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => router.push('/trades/new')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Add Manual Trade
-                </button>
-                <button
-                  onClick={() => router.push('/mt5/connect')}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                >
-                  Connect MT5
-                </button>
-              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Start by adding your first trade</p>
+              <button
+                onClick={() => router.push('/trades/new')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Add Manual Trade
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Symbol
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Volume
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Entry
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Exit
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       P/L
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Date
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {trades.map((trade) => (
                     <tr
                       key={trade.id}
-                      className="hover:bg-gray-50 cursor-pointer"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                       onClick={() => router.push(`/trades/${trade.id}`)}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {trade.symbol}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
-                            trade.trade_type === 'BUY'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            trade.trade_type === 'buy'
+                              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                              : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                           }`}
                         >
-                          {trade.trade_type}
+                          {trade.trade_type.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {trade.volume}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {trade.open_price.toFixed(5)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {trade.close_price ? trade.close_price.toFixed(5) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
                           className={`font-medium ${
                             trade.net_profit && trade.net_profit >= 0
-                              ? 'text-green-600'
-                              : 'text-red-600'
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
                           }`}
                         >
                           {formatCurrency(trade.net_profit)}
@@ -365,15 +301,29 @@ export default function Dashboard() {
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
                             trade.is_closed
-                              ? 'bg-gray-100 text-gray-800'
-                              : 'bg-yellow-100 text-yellow-800'
+                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                              : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
                           }`}
                         >
                           {trade.is_closed ? 'Closed' : 'Open'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {new Date(trade.open_time).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/trades/${trade.id}`);
+                            }}
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -382,7 +332,37 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <button
+            onClick={() => router.push('/trades/new')}
+            className="bg-blue-600 text-white rounded-lg shadow p-6 hover:bg-blue-700 transition"
+          >
+            <Plus className="h-8 w-8 mx-auto mb-2" />
+            <div className="font-semibold">New Trade</div>
+            <div className="text-sm opacity-90">Record a new trade</div>
+          </button>
+
+          <button
+            onClick={() => router.push('/journal/new')}
+            className="bg-purple-600 text-white rounded-lg shadow p-6 hover:bg-purple-700 transition"
+          >
+            <Edit className="h-8 w-8 mx-auto mb-2" />
+            <div className="font-semibold">New Journal Entry</div>
+            <div className="text-sm opacity-90">Document your insights</div>
+          </button>
+
+          <button
+            onClick={() => router.push('/analytics')}
+            className="bg-green-600 text-white rounded-lg shadow p-6 hover:bg-green-700 transition"
+          >
+            <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+            <div className="font-semibold">View Analytics</div>
+            <div className="text-sm opacity-90">Analyze your performance</div>
+          </button>
+        </div>
+      </div>
+    </Layout>
   );
 }

@@ -30,9 +30,8 @@ class Trade(Base):
     # Primary Key
     id = Column(Integer, primary_key=True, index=True)
     
-    # User and Account Reference
+    # User Reference
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    mt5_account_id = Column(Integer, ForeignKey("mt5_accounts.id", ondelete="CASCADE"), nullable=True)
     
     # Trade Identification
     mt5_ticket = Column(String(100), nullable=True, index=True)  # MT5 order ticket
@@ -68,7 +67,6 @@ class Trade(Base):
     
     # Relationships
     user = relationship("User", back_populates="trades")
-    mt5_account = relationship("MT5Account", back_populates="trades")
     journal_entry = relationship("JournalEntry", back_populates="trade", uselist=False)
     tags = relationship("TradeTag", secondary="trade_tag_associations", back_populates="trades")
     

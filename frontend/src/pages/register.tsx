@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,10 +37,25 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      console.log('Attempting registration...', { email: formData.email });
       await register(formData.email, formData.password, formData.fullName || undefined);
+      console.log('Registration successful, redirecting...');
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      
+      // Handle validation errors (array) or simple error messages (string)
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        const errorMessages = detail.map((e: any) => `${e.loc?.join(' → ') || 'Field'}: ${e.msg}`).join(', ');
+        setError(errorMessages);
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,20 +69,23 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="max-w-md w-full space-y-8 p-8">
+        <div className="flex justify-end mb-4">
+          <ThemeToggle />
+        </div>
         <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
+          <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-white">
             Create Account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Start tracking your trades today
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
               {error}
             </div>
           )}
@@ -117,7 +136,7 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
               />
-              <p className="mt-1 text-xs text-gray-500">At least 8 characters</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">At least 8 characters</p>
             </div>
 
             <div>
@@ -145,9 +164,9 @@ export default function RegisterPage() {
             {loading ? 'Creating account...' : 'Create account'}
           </button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
               Sign in
             </Link>
           </p>

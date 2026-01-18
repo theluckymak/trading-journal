@@ -34,11 +34,14 @@ async def get_current_user(
         HTTPException: If token is invalid or user not found
     """
     token = credentials.credentials
+    print(f"[DEBUG AUTH] Received token: {token[:50]}...")  # Print first 50 chars
     
     # Decode token
     payload = token_service.decode_token(token)
+    print(f"[DEBUG AUTH] Decoded payload: {payload}")
     
     if not payload or payload.get("type") != "access":
+        print(f"[DEBUG AUTH] Token validation failed - payload: {payload}, type: {payload.get('type') if payload else None}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

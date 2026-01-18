@@ -38,7 +38,8 @@ async def create_trade(
         take_profit=trade_data.take_profit,
         profit=trade_data.profit,
         commission=trade_data.commission,
-        swap=trade_data.swap
+        swap=trade_data.swap,
+        is_closed=trade_data.is_closed
     )
     
     return trade

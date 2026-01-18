@@ -1,5 +1,7 @@
 .env
 .env.local
+.env.production
+.env.oauth
 node_modules/
 .next/
 out/
@@ -15,6 +17,7 @@ ENV/
 .DS_Store
 *.log
 *.sqlite
+*.db
 .idea/
 .vscode/
 *.swp
@@ -23,3 +26,13 @@ ENV/
 htmlcov/
 .pytest_cache/
 alembic/versions/*.pyc
+
+# SSL certificates
+nginx/ssl/
+
+# Database backups
+backups/
+*.sql
+
+# Trading data (keep examples in repo if needed)
+backend/trading_journal.db

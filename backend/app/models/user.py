@@ -26,10 +26,14 @@ class User(Base):
     
     # Authentication
     email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    hashed_password = Column(String(255), nullable=True)  # Nullable for OAuth users
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    
+    # OAuth
+    oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', or None
+    oauth_id = Column(String(255), nullable=True, index=True)  # Provider's user ID
     
     # Profile
     full_name = Column(String(255), nullable=True)
@@ -42,9 +46,9 @@ class User(Base):
     
     # Relationships
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
-    mt5_accounts = relationship("MT5Account", back_populates="user", cascade="all, delete-orphan")
     trades = relationship("Trade", back_populates="user", cascade="all, delete-orphan")
     journal_entries = relationship("JournalEntry", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan", foreign_keys="ChatMessage.user_id")
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}')>"

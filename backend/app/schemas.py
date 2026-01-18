@@ -27,6 +27,12 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    """Schema for user profile update."""
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
 class UserResponse(BaseModel):
     """Schema for user response."""
     id: int
@@ -108,16 +114,24 @@ class TradeCreate(BaseModel):
     profit: Optional[float] = None
     commission: float = 0.0
     swap: float = 0.0
+    is_closed: Optional[bool] = False
 
 
 class TradeUpdate(BaseModel):
     """Schema for updating trade."""
+    symbol: Optional[str] = None
+    trade_type: Optional[TradeType] = None
+    volume: Optional[float] = Field(None, gt=0)
+    open_price: Optional[float] = Field(None, gt=0)
+    open_time: Optional[datetime] = None
     close_price: Optional[float] = None
     close_time: Optional[datetime] = None
     stop_loss: Optional[float] = None
     take_profit: Optional[float] = None
     profit: Optional[float] = None
     commission: Optional[float] = None
+    swap: Optional[float] = None
+    is_closed: Optional[bool] = None
     swap: Optional[float] = None
 
 

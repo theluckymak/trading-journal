@@ -37,7 +37,8 @@ class TradeService:
         take_profit: Optional[float] = None,
         profit: Optional[float] = None,
         commission: float = 0.0,
-        swap: float = 0.0
+        swap: float = 0.0,
+        is_closed: Optional[bool] = None
     ) -> Trade:
         """
         Create a manual trade entry.
@@ -60,13 +61,26 @@ class TradeService:
         Returns:
             Created Trade
         """
-        # Calculate net profit if provided
+        # Calculate profit if close_price is provided but profit isn't
+        if profit is None and close_price is not None:
+            # Calculate profit based on trade type
+            if trade_type == TradeType.BUY:
+                profit = (close_price - open_price) * volume
+            else:  # SELL
+                profit = (open_price - close_price) * volume
+        
+        # Calculate net profit
         net_profit = None
         if profit is not None:
-            net_profit = profit + commission + swap
+            net_profit = profit - commission - swap
         
         # Determine if trade is closed
-        is_closed = close_price is not None and close_time is not None
+        # If user explicitly sets is_closed, use that value
+        # Otherwise, auto-detect based on close_price and close_time
+        if is_closed is None:
+            is_closed = close_price is not None and close_time is not None
+        else:
+            is_closed = is_closed
         
         trade = Trade(
             user_id=user_id,
@@ -178,10 +192,22 @@ class TradeService:
             if hasattr(trade, key) and value is not None:
                 setattr(trade, key, value)
         
+        # Recalculate profit if prices/volume updated and profit not explicitly set
+        if 'profit' not in kwargs and any(k in kwargs for k in ['close_price', 'open_price', 'volume', 'trade_type']):
+            if trade.close_price is not None:
+                if trade.trade_type == TradeType.BUY:
+                    trade.profit = (trade.close_price - trade.open_price) * trade.volume
+                else:  # SELL
+                    trade.profit = (trade.open_price - trade.close_price) * trade.volume
+        
         # Recalculate net profit if financial fields updated
         if any(k in kwargs for k in ['profit', 'commission', 'swap']):
             if trade.profit is not None:
-                trade.net_profit = trade.profit + trade.commission + trade.swap
+                trade.net_profit = trade.profit - trade.commission - trade.swap
+        
+        # Update is_closed status if not explicitly set
+        if 'is_closed' not in kwargs:
+            trade.is_closed = trade.close_price is not None and trade.close_time is not None
         
         self.db.commit()
         self.db.refresh(trade)

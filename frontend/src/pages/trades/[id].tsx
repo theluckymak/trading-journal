@@ -1,0 +1,350 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, DollarSign, Activity, Trash2, Edit, AlertCircle } from 'lucide-react';
+
+interface Trade {
+  id: number;
+  symbol: string;
+  trade_type: string;
+  volume: number;
+  open_price: number;
+  close_price: number | null;
+  open_time: string;
+  close_time: string | null;
+  profit: number | null;
+  net_profit: number | null;
+  commission: number;
+  swap: number;
+  is_closed: boolean;
+  created_at: string;
+}
+
+export default function TradeDetail() {
+  const router = useRouter();
+  const { id } = router.query;
+  const { user } = useAuth();
+  const [trade, setTrade] = useState<Trade | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (id) {
+      fetchTrade();
+    }
+  }, [user, id, router]);
+
+  const fetchTrade = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.getTrade(Number(id));
+      setTrade(data);
+    } catch (err: any) {
+      setError('Failed to load trade');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (value: number | null) => {
+    if (value === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    try {
+      setDeleting(true);
+      await apiClient.deleteTrade(Number(id));
+      router.push('/dashboard?deleted=true');
+    } catch (err: any) {
+      setError('Failed to delete trade');
+      console.error(err);
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !trade) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Trade Not Found</h2>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isProfitable = trade.net_profit !== null && trade.net_profit >= 0;
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            >
+              <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trade Details</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">#{trade.id}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push(`/trades/edit/${trade.id}`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
+                <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delete Trade</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to delete this trade? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Trade Summary Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{trade.symbol}</h2>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${
+                  trade.trade_type === 'buy'
+                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                    : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                }`}
+              >
+                {trade.trade_type.toUpperCase()}
+              </span>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net P/L</p>
+              <p
+                className={`text-3xl font-bold ${
+                  isProfitable ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                }`}
+              >
+                {formatCurrency(trade.net_profit)}
+              </p>
+            </div>
+          </div>
+
+          {/* Status Badge */}
+          <div className="mb-6">
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                trade.is_closed
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                  : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+              }`}
+            >
+              <Activity className="h-4 w-4 mr-1" />
+              {trade.is_closed ? 'Closed' : 'Open'}
+            </span>
+          </div>
+
+          {/* Trade Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Entry Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
+                Entry
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Price</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">{trade.open_price.toFixed(5)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Time</p>
+                  <p className="text-base text-gray-900 dark:text-gray-200">{formatDate(trade.open_time)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Volume</p>
+                  <p className="text-base text-gray-900 dark:text-gray-200">{trade.volume}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Exit Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <TrendingDown className="h-5 w-5 mr-2 text-red-600 dark:text-red-400" />
+                Exit
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Price</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {trade.close_price ? trade.close_price.toFixed(5) : 'Open'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Time</p>
+                  <p className="text-base text-gray-900 dark:text-gray-200">
+                    {trade.close_time ? formatDate(trade.close_time) : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Gross P/L</p>
+                  <p
+                    className={`text-base font-semibold ${
+                      trade.profit && trade.profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {formatCurrency(trade.profit)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Details */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <DollarSign className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
+            Financial Breakdown
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between py-2 border-b dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Gross Profit/Loss</span>
+              <span className="font-semibold dark:text-gray-200">{formatCurrency(trade.profit)}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Commission</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(trade.commission)}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Swap</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(trade.swap)}</span>
+            </div>
+            <div className="flex justify-between py-3 bg-gray-50 dark:bg-gray-900 px-3 rounded-lg">
+              <span className="text-gray-900 dark:text-white font-semibold">Net Profit/Loss</span>
+              <span
+                className={`text-lg font-bold ${
+                  isProfitable ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                }`}
+              >
+                {formatCurrency(trade.net_profit)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
+            Metadata
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Created</span>
+              <span className="text-gray-900 dark:text-gray-200">{formatDate(trade.created_at)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Trade ID</span>
+              <span className="text-gray-900 dark:text-gray-200">#{trade.id}</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

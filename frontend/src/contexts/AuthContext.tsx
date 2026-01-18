@@ -10,6 +10,7 @@ interface User {
   full_name: string | null;
   role: string;
   is_active: boolean;
+  oauth_provider?: string | null;
 }
 
 interface AuthContextType {
@@ -24,12 +25,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Initialize from sessionStorage if available
+    if (typeof window !== 'undefined') {
+      const savedUser = sessionStorage.getItem('user');
+      if (savedUser) {
+        try {
+          return JSON.parse(savedUser);
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load user on mount
     loadUser();
+    
+    // Set up periodic token refresh (every 50 minutes)
+    const refreshInterval = setInterval(() => {
+      if (apiClient.isAuthenticated()) {
+        loadUser();
+      }
+    }, 50 * 60 * 1000); // 50 minutes
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const loadUser = async () => {
@@ -37,9 +60,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await apiClient.getCurrentUser();
         setUser(userData);
-      } catch (error) {
+        // Save to sessionStorage
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('user', JSON.stringify(userData));
+        }
+      } catch (error: any) {
         console.error('Failed to load user:', error);
-        apiClient.logout();
+        // Only logout if it's a 401 (unauthorized), not on network errors
+        if (error?.response?.status === 401) {
+          apiClient.logout();
+          setUser(null);
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('user');
+          }
+        }
       }
     }
     setLoading(false);
@@ -59,6 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await apiClient.logoutUser();
     setUser(null);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('user');
+    }
   };
 
   return (

@@ -4,24 +4,30 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 import { ArrowLeft } from 'lucide-react';
 
+type MarketType = 'forex' | 'futures' | 'crypto';
+
+const SYMBOL_SUGGESTIONS = {
+  forex: ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY', 'XAUUSD (Gold)'],
+  futures: ['NQ (E-mini Nasdaq)', 'ES (E-mini S&P 500)', 'YM (E-mini Dow)', 'RTY (E-mini Russell)', 'CL (Crude Oil)', 'GC (Gold)', 'SI (Silver)', 'NG (Natural Gas)', 'ZB (T-Bond)', 'ZN (10Y Note)'],
+  crypto: ['BTCUSD', 'ETHUSD', 'BNBUSD', 'SOLUSD', 'XRPUSD', 'ADAUSD', 'DOGEUSD', 'MATICUSD', 'AVAXUSD', 'LINKUSD'],
+};
+
 export default function NewTrade() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [marketType, setMarketType] = useState<MarketType>('forex');
   
   const [formData, setFormData] = useState({
     symbol: '',
-    trade_type: 'BUY',
+    trade_type: 'buy',
     volume: '',
     open_price: '',
     close_price: '',
-    stop_loss: '',
-    take_profit: '',
     open_time: '',
     close_time: '',
-    commission: '0',
-    swap: '0',
     is_closed: false,
   });
 
@@ -31,310 +37,372 @@ export default function NewTrade() {
     }
   }, [user, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
     setLoading(true);
 
     try {
-      // Convert string values to numbers
       const tradeData = {
         symbol: formData.symbol,
         trade_type: formData.trade_type,
         volume: parseFloat(formData.volume),
         open_price: parseFloat(formData.open_price),
         close_price: formData.close_price ? parseFloat(formData.close_price) : null,
-        stop_loss: formData.stop_loss ? parseFloat(formData.stop_loss) : null,
-        take_profit: formData.take_profit ? parseFloat(formData.take_profit) : null,
-        open_time: new Date(formData.open_time).toISOString(),
+        open_time: formData.open_time ? new Date(formData.open_time).toISOString() : new Date().toISOString(),
         close_time: formData.close_time ? new Date(formData.close_time).toISOString() : null,
-        commission: parseFloat(formData.commission),
-        swap: parseFloat(formData.swap),
         is_closed: formData.is_closed,
+        commission: 0.0,
+        swap: 0.0,
+        stop_loss: null,
+        take_profit: null,
+        profit: null,
       };
 
-      await apiClient.createTrade(tradeData);
-      router.push('/dashboard');
+      console.log('Submitting trade data:', tradeData);
+      
+      // Get access token from localStorage
+      let accessToken = localStorage.getItem('accessToken');
+      console.log('[DEBUG] Access token from localStorage:', accessToken ? `${accessToken.substring(0, 50)}...` : 'NULL');
+      
+      if (!accessToken) {
+        setError('Not authenticated. Please log in again.');
+        return;
+      }
+
+      // Use native fetch API instead of axios due to network issues
+      let response = await fetch('http://localhost:8000/api/trades', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(tradeData),
+      });
+
+      console.log('[DEBUG] Response status:', response.status);
+      console.log('[DEBUG] Response ok:', response.ok);
+
+      // If 401, try to refresh token and retry
+      if (response.status === 401) {
+        console.log('[DEBUG] Token expired, attempting refresh...');
+        const refreshToken = localStorage.getItem('refreshToken');
+        
+        if (refreshToken) {
+          try {
+            const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              const newAccessToken = refreshData.access_token;
+              localStorage.setItem('accessToken', newAccessToken);
+              console.log('[DEBUG] Token refreshed successfully, retrying request...');
+
+              // Retry the trade creation with new token
+              response = await fetch('http://localhost:8000/api/trades', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${newAccessToken}`,
+                },
+                body: JSON.stringify(tradeData),
+              });
+              console.log('[DEBUG] Retry response status:', response.status);
+            } else {
+              console.error('[DEBUG] Token refresh failed');
+              setError('Session expired. Please log in again.');
+              setTimeout(() => router.push('/login'), 2000);
+              return;
+            }
+          } catch (refreshError) {
+            console.error('[DEBUG] Token refresh error:', refreshError);
+            setError('Session expired. Please log in again.');
+            setTimeout(() => router.push('/login'), 2000);
+            return;
+          }
+        } else {
+          setError('Session expired. Please log in again.');
+          setTimeout(() => router.push('/login'), 2000);
+          return;
+        }
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        
+        const detail = errorData.detail;
+        if (Array.isArray(detail)) {
+          const errorMessages = detail.map((e: any) => `${e.loc?.join(' → ') || 'Field'}: ${e.msg}`).join(', ');
+          setError(errorMessages);
+        } else if (typeof detail === 'string') {
+          setError(detail);
+        } else {
+          setError(`Failed to create trade: ${response.status}`);
+        }
+        return;
+      }
+
+      const result = await response.json();
+      console.log('Trade created successfully:', result);
+      setSuccess(true);
+      
+      // Show success message then redirect
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create trade');
+      console.error('Trade creation error:', err);
+      
+      if (err.message) {
+        setError(`Error: ${err.message}`);
+      } else {
+        setError('Failed to create trade. Please check the console for details.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Add New Trade</h1>
-              <p className="text-sm text-gray-600">Manually log a trade to your journal</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Trade</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Record your trading activity</p>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          {/* Market Type Tabs */}
+          <div className="border-b dark:border-gray-700">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => {
+                  setMarketType('forex');
+                  setFormData({ ...formData, symbol: '' });
+                }}
+                className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                  marketType === 'forex'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                💱 Forex
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMarketType('futures');
+                  setFormData({ ...formData, symbol: '' });
+                }}
+                className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                  marketType === 'futures'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                📈 Futures
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMarketType('crypto');
+                  setFormData({ ...formData, symbol: '' });
+                }}
+                className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                  marketType === 'crypto'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                ₿ Crypto
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="p-6">
+            {success && (
+              <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Trade added successfully! Redirecting...
+              </div>
+            )}
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Symbol */}
+            <div className="space-y-6">
+              {/* Symbol Selection */}
               <div>
-                <label htmlFor="symbol" className="block text-sm font-medium text-gray-700 mb-1">
-                  Symbol *
-                </label>
-                <input
-                  id="symbol"
-                  name="symbol"
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="EURUSD"
-                  value={formData.symbol}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Trade Type */}
-              <div>
-                <label htmlFor="trade_type" className="block text-sm font-medium text-gray-700 mb-1">
-                  Type *
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Symbol *
                 </label>
                 <select
-                  id="trade_type"
-                  name="trade_type"
+                  value={formData.symbol}
+                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={formData.trade_type}
-                  onChange={handleChange}
                 >
-                  <option value="BUY">Buy</option>
-                  <option value="SELL">Sell</option>
+                  <option value="">Choose a symbol...</option>
+                  {SYMBOL_SUGGESTIONS[marketType].map((symbol) => (
+                    <option key={symbol} value={symbol.split(' ')[0]}>
+                      {symbol}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Volume */}
-              <div>
-                <label htmlFor="volume" className="block text-sm font-medium text-gray-700 mb-1">
-                  Volume (Lots) *
-                </label>
-                <input
-                  id="volume"
-                  name="volume"
-                  type="number"
-                  step="0.01"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.01"
-                  value={formData.volume}
-                  onChange={handleChange}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Trade Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Direction *
+                  </label>
+                  <select
+                    value={formData.trade_type}
+                    onChange={(e) => setFormData({ ...formData, trade_type: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    required
+                  >
+                    <option value="buy">Buy / Long</option>
+                    <option value="sell">Sell / Short</option>
+                  </select>
+                </div>
+
+                {/* Volume */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {marketType === 'forex' ? 'Lots' : marketType === 'futures' ? 'Contracts' : 'Amount'} *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.volume}
+                    onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    placeholder={marketType === 'forex' ? '1.0' : marketType === 'futures' ? '1' : '0.1'}
+                    required
+                  />
+                </div>
+
+                {/* Open Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Entry Price *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.00001"
+                    value={formData.open_price}
+                    onChange={(e) => setFormData({ ...formData, open_price: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    placeholder="Entry price"
+                    required
+                  />
+                </div>
+
+                {/* Close Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Exit Price
+                  </label>
+                  <input
+                    type="number"
+                    step="0.00001"
+                    value={formData.close_price}
+                    onChange={(e) => setFormData({ ...formData, close_price: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    placeholder="Leave empty if still open"
+                  />
+                </div>
+
+                {/* Open Time */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Entry Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.open_time}
+                    onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty for current time</p>
+                </div>
+
+                {/* Close Time */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Exit Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.close_time}
+                    onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    disabled={!formData.close_price}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Only if trade is closed</p>
+                </div>
               </div>
 
-              {/* Open Price */}
-              <div>
-                <label htmlFor="open_price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Entry Price *
-                </label>
-                <input
-                  id="open_price"
-                  name="open_price"
-                  type="number"
-                  step="0.00001"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1.10500"
-                  value={formData.open_price}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Close Price */}
-              <div>
-                <label htmlFor="close_price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Exit Price
-                </label>
-                <input
-                  id="close_price"
-                  name="close_price"
-                  type="number"
-                  step="0.00001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1.10600"
-                  value={formData.close_price}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Stop Loss */}
-              <div>
-                <label htmlFor="stop_loss" className="block text-sm font-medium text-gray-700 mb-1">
-                  Stop Loss
-                </label>
-                <input
-                  id="stop_loss"
-                  name="stop_loss"
-                  type="number"
-                  step="0.00001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1.10400"
-                  value={formData.stop_loss}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Take Profit */}
-              <div>
-                <label htmlFor="take_profit" className="block text-sm font-medium text-gray-700 mb-1">
-                  Take Profit
-                </label>
-                <input
-                  id="take_profit"
-                  name="take_profit"
-                  type="number"
-                  step="0.00001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1.10700"
-                  value={formData.take_profit}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Open Time */}
-              <div>
-                <label htmlFor="open_time" className="block text-sm font-medium text-gray-700 mb-1">
-                  Entry Time *
-                </label>
-                <input
-                  id="open_time"
-                  name="open_time"
-                  type="datetime-local"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={formData.open_time}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Close Time */}
-              <div>
-                <label htmlFor="close_time" className="block text-sm font-medium text-gray-700 mb-1">
-                  Exit Time
-                </label>
-                <input
-                  id="close_time"
-                  name="close_time"
-                  type="datetime-local"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={formData.close_time}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Commission */}
-              <div>
-                <label htmlFor="commission" className="block text-sm font-medium text-gray-700 mb-1">
-                  Commission
-                </label>
-                <input
-                  id="commission"
-                  name="commission"
-                  type="number"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
-                  value={formData.commission}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Swap */}
-              <div>
-                <label htmlFor="swap" className="block text-sm font-medium text-gray-700 mb-1">
-                  Swap
-                </label>
-                <input
-                  id="swap"
-                  name="swap"
-                  type="number"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
-                  value={formData.swap}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Is Closed */}
-              <div className="md:col-span-2">
+              {/* Closed Checkbox */}
+              <div className="pt-4 border-t dark:border-gray-700">
                 <label className="flex items-center">
                   <input
-                    id="is_closed"
-                    name="is_closed"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     checked={formData.is_closed}
-                    onChange={handleChange}
+                    onChange={(e) => setFormData({ ...formData, is_closed: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700">
-                    This trade is closed
-                  </span>
+                  <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">This trade is closed</span>
                 </label>
               </div>
-            </div>
 
-            <div className="mt-8 flex gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Adding Trade...' : 'Add Trade'}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard')}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-              >
-                Cancel
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-6">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition font-medium text-base"
+                >
+                  {loading ? 'Saving...' : '✓ Add Trade'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard')}
+                  className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 px-6 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium text-base"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </form>
-        </div>
-
-        {/* Info */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">Manual Trade Entry</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Enter your trade details manually from your broker's trading history</li>
-            <li>• You can add journal notes and analysis after creating the trade</li>
-            <li>• Profit/loss will be calculated automatically based on entry and exit prices</li>
-            <li>• Leave exit price empty for open trades</li>
-          </ul>
         </div>
       </main>
     </div>

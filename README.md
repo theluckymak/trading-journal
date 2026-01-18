@@ -1,16 +1,40 @@
-# Trading Journal + Analytics Platform
+# Trading Journal
 
-A production-ready full-stack web application for trading journal and analytics with MT5 integration.
+A comprehensive trading journal application for tracking trades, analyzing performance, and maintaining trading discipline.
 
-## 📋 Project Overview
+## Features
 
-This is a **complete, production-ready system** for traders to:
-- Track and analyze trading performance
-- Connect MT5 accounts with automatic trade synchronization
-- Maintain detailed trading journals with notes, tags, and screenshots
-- View comprehensive analytics (win rate, profit factor, expectancy, etc.)
+- 📊 **Dashboard** - Overview of your trading performance with key metrics
+- 💼 **Trade Management** - Add, edit, and track your trades across multiple instruments (Forex, Futures, Crypto)
+- 📝 **Journal Entries** - Document your trading thoughts, lessons learned, and trading psychology
+- 📈 **Analytics** - Advanced analytics with interactive charts and performance metrics
+- 📅 **Calendar View** - Tradezilla-style calendar showing daily P&L, trades, and R:R ratios
+- 🌙 **Dark Mode** - Full dark mode support with theme persistence
+- 🔐 **Authentication** - Secure JWT-based authentication with OAuth support (Google, GitHub)
+- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
 
-## 🏗️ Architecture
+## Tech Stack
+
+### Backend
+- **FastAPI** - Modern, fast Python web framework
+- **PostgreSQL** - Robust relational database
+- **Redis** - Caching and session management
+- **SQLAlchemy** - SQL toolkit and ORM
+- **Alembic** - Database migrations
+- **JWT** - Token-based authentication
+
+### Frontend
+- **Next.js 14** - React framework with SSR
+- **TypeScript** - Type-safe JavaScript
+- **TailwindCSS** - Utility-first CSS framework
+- **Recharts** - Charting library for React
+- **Lucide Icons** - Beautiful icon set
+
+### Infrastructure
+- **Docker & Docker Compose** - Containerization
+- **Nginx** - Reverse proxy and load balancing
+
+## Quick Start (Development)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -69,61 +93,245 @@ This is a **complete, production-ready system** for traders to:
 ## 🔐 Security Architecture
 
 ### Authentication Flow
-```
-1. User Registration
-   → Email + password validated
-   → Password hashed (bcrypt)
-   → User created in DB
-   
-2. User Login
-   → Credentials verified
-   → Access token (JWT, 15min expiry) generated
-   → Refresh token (JWT, 7day expiry) generated
-   → Refresh token stored in DB + HttpOnly cookie
-   → Access token returned to client
-   
-3. API Request
-   → Client sends access token in Authorization header
-   → Backend validates JWT signature
-   → User loaded from token payload
-   → Request processed
-   
-4. Token Refresh
-   → Access token expired
-   → Client sends refresh token
-   → Backend validates refresh token in DB
-   → New access token generated
-   → Client retries original request
-   
-5. Logout
-   → Refresh token revoked in DB
-   → Cookie cleared
+### Prerequisites
+- Docker and Docker Compose installed
+- Git
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/trading-journal.git
+cd trading-journal
 ```
 
-### Security Features
-- ✅ Password hashing with bcrypt
-- ✅ JWT access + refresh tokens
-- ✅ Token rotation and revocation
-- ✅ HttpOnly cookies (CSRF protection)
-- ✅ Rate limiting (SlowAPI)
-- ✅ CORS with whitelist
-- ✅ SQL injection protection (SQLAlchemy ORM)
-- ✅ XSS protection (React escaping)
-- ✅ Encrypted MT5 credentials (Fernet)
-
-## 🔌 MT5 Integration Flow
-
+2. Copy the environment file:
+```bash
+cp .env.example .env
 ```
-1. Add MT5 Account
-   → User provides: account number, password, broker, server
-   → Password encrypted (Fernet) before storage
-   → Test connection performed
-   → Account metadata saved
-   
-2. Sync Trades
-   → MT5Service connects to account
-   → Password decrypted
-   → MT5 login performed
+
+3. Update the `.env` file with your configuration (at minimum, change SECRET_KEY and passwords)
+
+4. Start the application:
+```bash
+docker-compose up -d
+```
+
+5. Access the application:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+
+6. Create an admin user:
+```bash
+docker exec -it trading-journal-backend python create_admin.py
+```
+
+## Production Deployment (DigitalOcean)
+
+### Prerequisites
+- DigitalOcean Droplet (Ubuntu 22.04 LTS recommended, minimum 2GB RAM)
+- Domain name (optional, for HTTPS)
+- SSH access to your droplet
+
+### Step 1: Prepare the Droplet
+
+SSH into your droplet:
+```bash
+ssh root@your_droplet_ip
+```
+
+Update system packages:
+```bash
+apt update && apt upgrade -y
+```
+
+Install Docker:
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+```
+
+Install Docker Compose:
+```bash
+apt install docker-compose -y
+```
+
+### Step 2: Clone and Configure
+
+Clone the repository:
+```bash
+cd /opt
+git clone https://github.com/yourusername/trading-journal.git
+cd trading-journal
+```
+
+Copy and configure environment:
+```bash
+cp .env.example .env
+nano .env
+```
+
+**Important:** Update these values in `.env`:
+- `SECRET_KEY` - Generate a strong random key
+- `POSTGRES_PASSWORD` - Use a strong password
+- `POSTGRES_USER` - Change from default
+- `NEXT_PUBLIC_API_URL` - Set to your domain or IP (e.g., `http://your-domain.com` or `http://your_ip`)
+- `CORS_ORIGINS` - Add your domain/IP
+
+### Step 3: Deploy
+
+Build and start containers:
+```bash
+docker-compose -f docker-compose.production.yml up -d --build
+```
+
+Run database migrations:
+```bash
+docker exec -it trading-journal-backend-prod alembic upgrade head
+```
+
+Create admin user:
+```bash
+docker exec -it trading-journal-backend-prod python create_admin.py
+```
+
+### Step 4: Configure Firewall
+
+```bash
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+```
+
+### Step 5: Setup HTTPS (Optional but Recommended)
+
+Install Certbot:
+```bash
+apt install certbot python3-certbot-nginx -y
+```
+
+Obtain SSL certificate:
+```bash
+certbot --nginx -d your-domain.com
+```
+
+Update `nginx/nginx.conf` to uncomment the HTTPS server block and update with your domain.
+
+Restart Nginx:
+```bash
+docker-compose -f docker-compose.production.yml restart nginx
+```
+
+### Step 6: Setup Automatic Backups
+
+Create backup script:
+```bash
+nano /opt/backup-trading-journal.sh
+```
+
+Add:
+```bash
+#!/bin/bash
+BACKUP_DIR="/opt/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+mkdir -p $BACKUP_DIR
+
+# Backup database
+docker exec trading-journal-db-prod pg_dump -U trading_user trading_journal > $BACKUP_DIR/db_$DATE.sql
+
+# Keep only last 7 days of backups
+find $BACKUP_DIR -name "db_*.sql" -mtime +7 -delete
+```
+
+Make executable:
+```bash
+chmod +x /opt/backup-trading-journal.sh
+```
+
+Add to crontab (daily at 2 AM):
+```bash
+crontab -e
+# Add this line:
+0 2 * * * /opt/backup-trading-journal.sh
+```
+
+## Monitoring and Maintenance
+
+### View logs:
+```bash
+docker-compose -f docker-compose.production.yml logs -f
+```
+
+### Restart services:
+```bash
+docker-compose -f docker-compose.production.yml restart
+```
+
+### Update application:
+```bash
+cd /opt/trading-journal
+git pull
+docker-compose -f docker-compose.production.yml up -d --build
+```
+
+### Check container status:
+```bash
+docker-compose -f docker-compose.production.yml ps
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | postgresql://trading_user:password@db:5432/trading_journal |
+| `REDIS_URL` | Redis connection string | redis://redis:6379/0 |
+| `SECRET_KEY` | JWT secret key | **Must change in production** |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT access token expiry | 30 |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | JWT refresh token expiry | 30 |
+| `CORS_ORIGINS` | Allowed CORS origins | http://localhost:3000 |
+| `NEXT_PUBLIC_API_URL` | Frontend API URL | http://localhost:8000 |
+
+## API Documentation
+
+Once the backend is running, visit:
+- Swagger UI: `http://your-domain/docs`
+- ReDoc: `http://your-domain/redoc`
+
+## Database Schema
+
+The application uses the following main models:
+- **Users** - User accounts with authentication
+- **Trades** - Individual trade records
+- **Journal Entries** - Trade journal notes
+- **Chat Messages** - AI chat conversations
+
+## Supported Trading Instruments
+
+- **Forex**: EUR/USD, GBP/USD, USD/JPY, etc.
+- **Futures**: NQ (Nasdaq), ES (S&P 500), YM (Dow), GC (Gold), CL (Crude Oil)
+- **Crypto**: BTC/USD, ETH/USD, and other major pairs
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For issues and questions:
+- Create an issue on GitHub
+- Check the documentation at `/docs`
+
+## Acknowledgments
+
+- Inspired by Tradezilla trading journal
+- Built with modern web technologies
+- Designed for traders, by traders
    → Trade history retrieved (mt5.history_deals_get)
    → Deals processed into trades
    → New trades saved to database
