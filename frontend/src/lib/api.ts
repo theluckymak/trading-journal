@@ -1,12 +1,16 @@
 /**
  * API client with authentication support.
+ * Last updated: 2026-01-19
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
+
+// Railway backend URL - hardcoded to bypass env var issues
+const RAILWAY_BACKEND = 'https://dependable-solace-production-75f7.up.railway.app';
 
 // Use backend service name for server-side calls, Railway backend for browser
 const API_URL = typeof window === 'undefined' 
   ? (process.env.NEXT_PUBLIC_API_URL_SERVER || 'http://backend:8000')
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://dependable-solace-production-75f7.up.railway.app');
+  : (process.env.NEXT_PUBLIC_API_URL || RAILWAY_BACKEND);
 
 class ApiClient {
   private client: AxiosInstance;
