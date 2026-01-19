@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Cache bust for Railway - forces rebuild
+ARG CACHEBUST=1
+
 # Copy package files
 COPY package*.json ./
 
