@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function HomePage() {
   const router = useRouter();
@@ -25,13 +26,16 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Trading Journal & Analytics
           </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
             Professional trading journal with MT5 integration. Track your trades,
             analyze performance, and improve your trading strategy.
           </p>
@@ -49,24 +53,24 @@ export default function HomePage() {
         <div className="mt-20 grid md:grid-cols-3 gap-8">
           <div className="card text-center">
             <div className="text-4xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold mb-2">Analytics</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Analytics</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Win rate, profit factor, expectancy, and detailed performance metrics
             </p>
           </div>
 
           <div className="card text-center">
             <div className="text-4xl mb-4">🔗</div>
-            <h3 className="text-xl font-semibold mb-2">MT5 Integration</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">MT5 Integration</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Automatic trade import from MetaTrader 5 with secure credentials
             </p>
           </div>
 
           <div className="card text-center">
             <div className="text-4xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold mb-2">Trade Journal</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Trade Journal</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Detailed notes, tags, screenshots, and analysis for every trade
             </p>
           </div>
