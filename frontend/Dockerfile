@@ -11,8 +11,8 @@ RUN npm ci
 # Copy application
 COPY . .
 
-# Accept build arguments
-ARG NEXT_PUBLIC_API_URL
+# Accept build arguments with default Railway backend URL
+ARG NEXT_PUBLIC_API_URL=https://dependable-solace-production-75f7.up.railway.app
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Build application
