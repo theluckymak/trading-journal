@@ -334,7 +334,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <button
             onClick={() => router.push('/trades/new')}
             className="bg-blue-600 text-white rounded-lg shadow p-6 hover:bg-blue-700 transition"
