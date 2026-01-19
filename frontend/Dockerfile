@@ -15,8 +15,8 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=https://dependable-solace-production-75f7.up.railway.app
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Build application
-RUN npm run build
+# Force cache bust and verify env var
+RUN echo "Building with API_URL: $NEXT_PUBLIC_API_URL" && npm run build
 
 # Expose port
 EXPOSE 3000
