@@ -3,10 +3,10 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Use backend service name for server-side calls, localhost for browser
+// Use backend service name for server-side calls, Railway backend for browser
 const API_URL = typeof window === 'undefined' 
   ? (process.env.NEXT_PUBLIC_API_URL_SERVER || 'http://backend:8000')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://dependable-solace-production-75f7.up.railway.app');
 
 class ApiClient {
   private client: AxiosInstance;
