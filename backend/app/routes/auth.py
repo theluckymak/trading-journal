@@ -3,6 +3,8 @@ Authentication routes.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.database import get_db
 from app.schemas import UserCreate, UserLogin, UserResponse, TokenResponse, RefreshTokenRequest, UserUpdate
@@ -13,10 +15,13 @@ from app.models.user import User
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/hour")  # Limit registration to 5 per hour per IP
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: Session = Depends(get_db)
 ):
@@ -31,6 +36,7 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("10/minute")  # Limit login attempts to prevent brute force
 async def login(
     user_data: UserLogin,
     request: Request,
@@ -268,8 +274,10 @@ async def oauth_login(
 
 
 @router.get("/verify-email", status_code=status.HTTP_200_OK)
+@limiter.limit("10/hour")  # Limit verification attempts
 async def verify_email(
     token: str,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Verify user email with token."""
@@ -280,8 +288,10 @@ async def verify_email(
 
 
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
+@limiter.limit("3/hour")  # Limit resend to prevent spam
 async def resend_verification(
     email: str,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Resend verification email."""

@@ -13,6 +13,13 @@ from app.config import settings
 from app.database import init_db
 from app.routes import auth_router, trades_router, journal_router
 from app.routes.chat import router as chat_router
+from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.request_id import RequestIDMiddleware
+from app.utils.logging import setup_logging, get_logger
+
+# Setup logging
+setup_logging(level="INFO")
+logger = get_logger(__name__)
 
 
 # Initialize rate limiter
@@ -31,15 +38,40 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Add security middleware
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIDMiddleware)
+
 # Add global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Log all exceptions."""
-    print(f"ERROR: {type(exc).__name__}: {str(exc)}")
-    print(f"Traceback: {traceback.format_exc()}")
+    """Handle all unhandled exceptions without exposing internal details."""
+    # Log the full error server-side for debugging
+    from datetime import datetime
+    from app.middleware.request_id import get_request_id
+    
+    error_id = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    request_id = get_request_id() or "unknown"
+    
+    logger.error(
+        f"Unhandled exception: {type(exc).__name__}: {str(exc)}",
+        extra={
+            "error_id": error_id,
+            "request_id": request_id,
+            "path": str(request.url),
+            "method": request.method,
+            "traceback": traceback.format_exc()
+        }
+    )
+    
+    # Return generic error to client (don't expose internals)
     return JSONResponse(
         status_code=500,
-        content={"detail": f"{type(exc).__name__}: {str(exc)}"}
+        content={
+            "detail": "Internal server error",
+            "error_id": error_id,
+            "request_id": request_id
+        }
     )
 
 # Configure CORS

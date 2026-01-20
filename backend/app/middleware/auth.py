@@ -10,6 +10,9 @@ from app.database import get_db
 from app.services.token_service import token_service
 from app.services.auth_service import AuthService
 from app.models.user import User
+from app.utils.logging import get_logger, log_security_event
+
+logger = get_logger(__name__)
 
 
 # HTTP Bearer token scheme
@@ -34,14 +37,12 @@ async def get_current_user(
         HTTPException: If token is invalid or user not found
     """
     token = credentials.credentials
-    print(f"[DEBUG AUTH] Received token: {token[:50]}...")  # Print first 50 chars
     
     # Decode token
     payload = token_service.decode_token(token)
-    print(f"[DEBUG AUTH] Decoded payload: {payload}")
     
     if not payload or payload.get("type") != "access":
-        print(f"[DEBUG AUTH] Token validation failed - payload: {payload}, type: {payload.get('type') if payload else None}")
+        log_security_event("invalid_token", {"reason": "token_decode_failed"})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -62,6 +63,7 @@ async def get_current_user(
     user = auth_service.get_user_by_id(int(user_id))
     
     if not user:
+        log_security_event("user_not_found", {"user_id": user_id})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
@@ -69,11 +71,13 @@ async def get_current_user(
         )
     
     if not user.is_active:
+        log_security_event("inactive_user_access", {"user_id": user_id})
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
     
+    logger.debug(f"Authenticated user: {user.id}")
     return user
 
 

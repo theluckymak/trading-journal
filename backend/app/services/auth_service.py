@@ -12,6 +12,10 @@ from app.models.auth import RefreshToken
 from app.services.password_service import password_service
 from app.services.token_service import token_service
 from app.services.email_service import EmailService
+from app.utils.validators import validate_password_strength, sanitize_input
+from app.utils.logging import get_logger, log_security_event
+
+logger = get_logger(__name__)
 
 
 class AuthService:
@@ -45,11 +49,26 @@ class AuthService:
             Created user
             
         Raises:
-            HTTPException: If email already exists
+            HTTPException: If email already exists or password is weak
         """
+        # Validate password strength
+        is_valid, error_message = validate_password_strength(password)
+        if not is_valid:
+            log_security_event("weak_password_attempt", {"email": email})
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_message
+            )
+        
+        # Sanitize inputs
+        email = sanitize_input(email, 255)
+        if full_name:
+            full_name = sanitize_input(full_name, 100)
+        
         # Check if user already exists
         existing_user = self.db.query(User).filter(User.email == email).first()
         if existing_user:
+            log_security_event("duplicate_registration", {"email": email})
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
@@ -80,6 +99,7 @@ class AuthService:
         # Send verification email
         self.email_service.send_verification_email(email, verification_token)
         
+        logger.info(f"New user registered: {user.id}")
         return user
     
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
@@ -97,25 +117,30 @@ class AuthService:
         user = self.db.query(User).filter(User.email == email).first()
         
         if not user:
+            log_security_event("login_failed", {"email": email, "reason": "user_not_found"})
             return None
         
         if not user.is_active:
+            log_security_event("login_failed", {"email": email, "reason": "account_inactive"})
             return None
         
         # Check if email is verified (skip for OAuth users)
         if not user.oauth_provider and not user.is_verified:
+            log_security_event("login_failed", {"email": email, "reason": "email_not_verified"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Please verify your email before logging in"
             )
         
         if not password_service.verify_password(password, user.hashed_password):
+            log_security_event("login_failed", {"email": email, "reason": "invalid_password"})
             return None
         
         # Update last login
         user.last_login_at = datetime.utcnow()
         self.db.commit()
         
+        logger.info(f"User logged in: {user.id}")
         return user
     
     def create_tokens(

@@ -27,12 +27,17 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # CORS - can be overridden in .env
+    # For production, set: CORS_ORIGINS=https://maktrades.app,https://your-backend-domain.railway.app
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
     
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
-        """Parse CORS_ORIGINS string into list."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        """Parse CORS_ORIGINS string into list and validate."""
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        # Log CORS origins for security audit (don't expose in production logs)
+        if self.DEBUG:
+            print(f"CORS allowed origins: {origins}")
+        return origins
     
     # Email
     SMTP_HOST: str = ""

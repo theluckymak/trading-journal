@@ -65,15 +65,9 @@ class TokenService:
             Decoded token payload if valid, None otherwise
         """
         try:
-            print(f"[DEBUG TOKEN] Attempting to decode token of length: {len(token)}")
-            print(f"[DEBUG TOKEN] Token starts with: {token[:100]}")
-            print(f"[DEBUG TOKEN] Secret key: {self.secret_key[:20]}...")
-            print(f"[DEBUG TOKEN] Algorithm: {self.algorithm}")
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-            print(f"[DEBUG TOKEN] Successfully decoded: {payload}")
             return payload
-        except JWTError as e:
-            print(f"[DEBUG TOKEN] Decode failed with error: {type(e).__name__}: {str(e)}")
+        except JWTError:
             return None
     
     def get_refresh_token_expiry(self) -> datetime:

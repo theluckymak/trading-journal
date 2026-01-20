@@ -17,8 +17,13 @@ class UserRole(str, Enum):
 class UserCreate(BaseModel):
     """Schema for user registration."""
     email: EmailStr
-    password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
-    full_name: Optional[str] = None
+    password: str = Field(
+        ..., 
+        min_length=8,
+        max_length=128,
+        description="Password must be 8-128 characters with uppercase, lowercase, digit, and special character"
+    )
+    full_name: Optional[str] = Field(None, max_length=100, pattern="^[a-zA-Z0-9\\s\\-\\.]+$")
 
 
 class UserLogin(BaseModel):
@@ -29,7 +34,7 @@ class UserLogin(BaseModel):
 
 class UserUpdate(BaseModel):
     """Schema for user profile update."""
-    full_name: Optional[str] = None
+    full_name: Optional[str] = Field(None, max_length=100, pattern="^[a-zA-Z0-9\\s\\-\\.]+$")
     email: Optional[EmailStr] = None
 
 
@@ -102,18 +107,18 @@ class TradeSource(str, Enum):
 
 class TradeCreate(BaseModel):
     """Schema for creating manual trade."""
-    symbol: str
+    symbol: str = Field(..., min_length=1, max_length=20, pattern="^[A-Z0-9]+$", description="Trading symbol (uppercase alphanumeric)")
     trade_type: TradeType
-    volume: float = Field(..., gt=0, description="Position size must be positive")
-    open_price: float = Field(..., gt=0)
+    volume: float = Field(..., gt=0, le=1000000, description="Position size must be positive and reasonable")
+    open_price: float = Field(..., gt=0, le=1000000)
     open_time: datetime
-    close_price: Optional[float] = Field(None, gt=0)
+    close_price: Optional[float] = Field(None, gt=0, le=1000000)
     close_time: Optional[datetime] = None
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
-    profit: Optional[float] = None
-    commission: float = 0.0
-    swap: float = 0.0
+    stop_loss: Optional[float] = Field(None, gt=0)
+    take_profit: Optional[float] = Field(None, gt=0)
+    profit: Optional[float] = Field(None, ge=-1000000, le=1000000)
+    commission: float = Field(0.0, ge=-10000, le=0)
+    swap: float = Field(0.0, ge=-10000, le=10000)
     is_closed: Optional[bool] = False
 
 
@@ -162,14 +167,14 @@ class TradeResponse(BaseModel):
 # Journal Schemas
 class JournalEntryCreate(BaseModel):
     """Schema for creating/updating journal entry."""
-    title: Optional[str] = None
-    notes: Optional[str] = None
-    pre_trade_analysis: Optional[str] = None
-    post_trade_analysis: Optional[str] = None
-    emotional_state: Optional[str] = None
-    mistakes: Optional[str] = None
-    lessons_learned: Optional[str] = None
-    screenshot_urls: Optional[List[str]] = None
+    title: Optional[str] = Field(None, max_length=200)
+    notes: Optional[str] = Field(None, max_length=10000)
+    pre_trade_analysis: Optional[str] = Field(None, max_length=10000)
+    post_trade_analysis: Optional[str] = Field(None, max_length=10000)
+    emotional_state: Optional[str] = Field(None, max_length=500)
+    mistakes: Optional[str] = Field(None, max_length=5000)
+    lessons_learned: Optional[str] = Field(None, max_length=5000)
+    screenshot_urls: Optional[List[str]] = Field(None, max_items=10)
 
 
 class JournalEntryResponse(BaseModel):
