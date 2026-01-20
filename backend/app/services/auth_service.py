@@ -96,8 +96,13 @@ class AuthService:
         self.db.commit()
         self.db.refresh(user)
         
-        # Send verification email
-        self.email_service.send_verification_email(email, verification_token)
+        # Send verification email (non-blocking - don't fail registration if email fails)
+        try:
+            self.email_service.send_verification_email(email, verification_token)
+            logger.info(f"Verification email sent to: {email}")
+        except Exception as e:
+            logger.error(f"Failed to send verification email to {email}: {str(e)}")
+            # Don't fail registration if email fails - user can resend later
         
         logger.info(f"New user registered: {user.id}")
         return user
@@ -359,5 +364,14 @@ class AuthService:
         user.verification_token_expires = verification_expires
         self.db.commit()
         
-        # Send verification email
-        return self.email_service.send_verification_email(email, verification_token)
+        # Send verification email (non-blocking)
+        try:
+            self.email_service.send_verification_email(email, verification_token)
+            logger.info(f"Verification email resent to: {email}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to resend verification email to {email}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later."
+            )
