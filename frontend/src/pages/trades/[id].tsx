@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 import { ArrowLeft, Calendar, TrendingUp, TrendingDown, DollarSign, Activity, Trash2, Edit, AlertCircle } from 'lucide-react';
 
+// Cache bust: 2026-01-20-v2
+
 interface Trade {
   id: number;
   symbol: string;
