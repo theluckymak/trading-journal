@@ -72,7 +72,7 @@ export default function NewTrade() {
       }
 
       // Use native fetch API instead of axios due to network issues
-      let response = await fetch('http://localhost:8000/api/trades', {
+      let response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function NewTrade() {
         
         if (refreshToken) {
           try {
-            const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
+            const refreshResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/auth/refresh', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export default function NewTrade() {
               console.log('[DEBUG] Token refreshed successfully, retrying request...');
 
               // Retry the trade creation with new token
-              response = await fetch('http://localhost:8000/api/trades', {
+              response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

@@ -85,7 +85,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
         return;
       }
 
-      let response = await fetch('http://localhost:8000/api/trades', {
+      let response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
         
         if (refreshToken) {
           try {
-            const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
+            const refreshResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/auth/refresh', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
               const newAccessToken = refreshData.access_token;
               localStorage.setItem('accessToken', newAccessToken);
 
-              response = await fetch('http://localhost:8000/api/trades', {
+              response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
