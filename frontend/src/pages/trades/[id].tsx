@@ -89,8 +89,8 @@ export default function TradeDetail() {
         setJournal(entry);
         setJournalData({
           content: entry.notes || '',
-          tags: '',
-          mood: 'neutral',
+          tags: entry.mistakes || '',
+          mood: entry.emotional_state || 'neutral',
         });
       }
     } catch (err) {
@@ -506,6 +506,28 @@ export default function TradeDetail() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📸 Setup Photo URL (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/setup-screenshot.png"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📸 Trade Photo URL (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/trade-screenshot.png"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={saveJournal}
@@ -533,8 +555,24 @@ export default function TradeDetail() {
           ) : (
             <div className="space-y-4">
               <div>
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{journal?.content}</p>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{journal?.notes}</p>
               </div>
+
+              {journal?.mistakes && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {journal.mistakes.split(',').map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full"
+                      >
+                        {tag.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {journal?.tags && journal.tags.length > 0 && (
                 <div>
@@ -555,9 +593,9 @@ export default function TradeDetail() {
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>Mood:</span>
                 <span className="font-medium">
-                  {journal?.mood === 'positive' && '😊 Positive'}
-                  {journal?.mood === 'neutral' && '😐 Neutral'}
-                  {journal?.mood === 'negative' && '😟 Negative'}
+                  {journal?.emotional_state === 'positive' && '😊 Positive'}
+                  {journal?.emotional_state === 'neutral' && '😐 Neutral'}
+                  {journal?.emotional_state === 'negative' && '😟 Negative'}
                 </span>
               </div>
             </div>
