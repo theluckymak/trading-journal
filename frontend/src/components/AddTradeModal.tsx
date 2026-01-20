@@ -177,13 +177,16 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
         try {
           const journalPayload = {
             title: `Trade: ${formData.symbol}`,
-            content: journalData.content,
-            tags: journalData.tags.split(',').map(t => t.trim()).filter(Boolean),
-            mood: journalData.mood,
-            trade_id: createdTrade.id,
+            notes: journalData.content,
+            pre_trade_analysis: '',
+            post_trade_analysis: '',
+            emotional_state: journalData.mood,
+            mistakes: [],
+            lessons_learned: [],
+            screenshot_urls: [],
           };
 
-          const journalResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/journal/entries', {
+          const journalResponse = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${createdTrade.id}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

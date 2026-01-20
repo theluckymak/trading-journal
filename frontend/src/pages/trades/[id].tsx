@@ -76,23 +76,20 @@ export default function TradeDetail() {
 
   const fetchJournal = async () => {
     try {
-      const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries?trade_id=${id}`, {
+      const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
       
       if (response.ok) {
-        const entries = await response.json();
-        if (entries.length > 0) {
-          const entry = entries[0];
-          setJournal(entry);
-          setJournalData({
-            content: entry.content,
-            tags: entry.tags.join(', '),
-            mood: entry.mood,
-          });
-        }
+        const entry = await response.json();
+        setJournal(entry);
+        setJournalData({
+          content: entry.notes || '',
+          tags: '',
+          mood: 'neutral',
+        });
       }
     } catch (err) {
       console.error('Failed to load journal:', err);
@@ -103,17 +100,17 @@ export default function TradeDetail() {
     try {
       const payload = {
         title: `Trade: ${trade?.symbol}`,
-        content: journalData.content,
-        tags: journalData.tags.split(',').map(t => t.trim()).filter(Boolean),
-        mood: journalData.mood,
-        trade_id: Number(id),
+        notes: journalData.content,
+        pre_trade_analysis: '',
+        post_trade_analysis: '',
+        emotional_state: journalData.mood,
+        mistakes: [],
+        lessons_learned: [],
+        screenshot_urls: [],
       };
 
-      const url = journal 
-        ? `https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${journal.id}`
-        : 'https://dependable-solace-production-75f7.up.railway.app/api/journal/entries';
-      
-      const method = journal ? 'PUT' : 'POST';
+      const url = `https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${id}`;
+      const method = 'POST';
 
       const response = await fetch(url, {
         method,
@@ -127,8 +124,11 @@ export default function TradeDetail() {
       if (response.ok) {
         await fetchJournal();
         setEditingJournal(false);
+        alert('Journal saved successfully!');
       } else {
-        alert('Failed to save journal');
+        const errorData = await response.json();
+        console.error('Save error:', errorData);
+        alert(`Failed to save journal: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Error saving journal:', err);
