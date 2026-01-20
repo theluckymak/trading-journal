@@ -20,9 +20,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Create startup script that runs migrations then starts the app
-RUN echo '#!/bin/sh\nalembic upgrade head\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000' > /app/start.sh && \
-    chmod +x /app/start.sh
-
-# Run application with migrations
-CMD ["/bin/sh", "/app/start.sh"]
+# Run application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
