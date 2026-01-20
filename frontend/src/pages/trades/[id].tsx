@@ -104,13 +104,15 @@ export default function TradeDetail() {
         pre_trade_analysis: '',
         post_trade_analysis: '',
         emotional_state: journalData.mood,
-        mistakes: [],
+        mistakes: journalData.tags ? journalData.tags.split(',').map(t => t.trim()).filter(t => t) : [],
         lessons_learned: [],
         screenshot_urls: [],
       };
 
       const url = `https://dependable-solace-production-75f7.up.railway.app/journal/entries/${id}`;
       const method = 'POST';
+
+      console.log('Saving journal:', { url, payload, tradeId: id });
 
       const response = await fetch(url, {
         method,
@@ -120,6 +122,8 @@ export default function TradeDetail() {
         },
         body: JSON.stringify(payload),
       });
+
+      console.log('Response status:', response.status);
 
       if (response.ok) {
         await fetchJournal();
@@ -131,7 +135,7 @@ export default function TradeDetail() {
         const errorMessage = typeof errorData.detail === 'string' 
           ? errorData.detail 
           : errorData.detail?.msg || errorData.message || JSON.stringify(errorData.detail) || 'Unknown error';
-        alert(`Failed to save journal: ${errorMessage}`);
+        alert(`Failed to save journal: ${errorMessage}\n\nIf this trade was created by another user, you cannot add a journal to it.`);
       }
     } catch (err: any) {
       console.error('Error saving journal:', err);
