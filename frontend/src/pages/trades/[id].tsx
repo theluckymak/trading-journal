@@ -25,10 +25,14 @@ interface Trade {
 
 interface JournalEntry {
   id: number;
-  title: string;
-  content: string;
-  tags: string[];
-  mood: 'positive' | 'neutral' | 'negative';
+  title: string | null;
+  notes: string | null;
+  pre_trade_analysis: string | null;
+  post_trade_analysis: string | null;
+  emotional_state: string | null;
+  mistakes: string | null;
+  lessons_learned: string | null;
+  screenshot_urls: string | null;
   trade_id: number | null;
   created_at: string;
   updated_at: string;
