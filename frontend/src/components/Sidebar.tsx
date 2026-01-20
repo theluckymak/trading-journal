@@ -20,7 +20,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import AddTradeModal from './AddTradeModal';
-import AddJournalModal from './AddJournalModal';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -29,7 +28,6 @@ export default function Sidebar() {
   
   // Modal states
   const [showTradeModal, setShowTradeModal] = useState(false);
-  const [showJournalModal, setShowJournalModal] = useState(false);
   
   // Initialize state from localStorage immediately
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -74,7 +72,6 @@ export default function Sidebar() {
   const menuItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/trades', icon: TrendingUp, label: 'Trades' },
-    { href: '/journal', icon: BookOpen, label: 'Journal' },
     { href: '/analytics', icon: BarChart3, label: 'Analytics' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },
     { href: '/contact', icon: MessageSquare, label: 'Contact' },
@@ -108,8 +105,8 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 overflow-y-auto">
-        {/* Quick Add Buttons */}
-        <div className="mb-4 space-y-2">
+        {/* Quick Add Button */}
+        <div className="mb-4">
           <button
             onClick={() => setShowTradeModal(true)}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all duration-200`}
@@ -117,14 +114,6 @@ export default function Sidebar() {
           >
             <Plus className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span className="font-medium transition-opacity duration-200">Add Trade</span>}
-          </button>
-          <button
-            onClick={() => setShowJournalModal(true)}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-4 py-3 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-all duration-200`}
-            title={isCollapsed ? 'Add Journal' : ''}
-          >
-            <Plus className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span className="font-medium transition-opacity duration-200">Add Journal</span>}
           </button>
         </div>
 
@@ -211,11 +200,6 @@ export default function Sidebar() {
         isOpen={showTradeModal}
         onClose={() => setShowTradeModal(false)}
         onSuccess={() => router.push('/dashboard')}
-      />
-      <AddJournalModal
-        isOpen={showJournalModal}
-        onClose={() => setShowJournalModal(false)}
-        onSuccess={() => router.push('/journal')}
       />
     </div>
   );

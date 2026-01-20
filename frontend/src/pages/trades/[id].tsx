@@ -21,15 +21,33 @@ interface Trade {
   created_at: string;
 }
 
+interface JournalEntry {
+  id: number;
+  title: string;
+  content: string;
+  tags: string[];
+  mood: 'positive' | 'neutral' | 'negative';
+  trade_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function TradeDetail() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
   const [trade, setTrade] = useState<Trade | null>(null);
+  const [journal, setJournal] = useState<JournalEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingJournal, setEditingJournal] = useState(false);
+  const [journalData, setJournalData] = useState({
+    content: '',
+    tags: '',
+    mood: 'neutral' as 'positive' | 'neutral' | 'negative',
+  });
 
   useEffect(() => {
     if (!user) {
@@ -47,11 +65,74 @@ export default function TradeDetail() {
       setLoading(true);
       const data = await apiClient.getTrade(Number(id));
       setTrade(data);
+      await fetchJournal();
     } catch (err: any) {
       setError('Failed to load trade');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchJournal = async () => {
+    try {
+      const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries?trade_id=${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const entries = await response.json();
+        if (entries.length > 0) {
+          const entry = entries[0];
+          setJournal(entry);
+          setJournalData({
+            content: entry.content,
+            tags: entry.tags.join(', '),
+            mood: entry.mood,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load journal:', err);
+    }
+  };
+
+  const saveJournal = async () => {
+    try {
+      const payload = {
+        title: `Trade: ${trade?.symbol}`,
+        content: journalData.content,
+        tags: journalData.tags.split(',').map(t => t.trim()).filter(Boolean),
+        mood: journalData.mood,
+        trade_id: Number(id),
+      };
+
+      const url = journal 
+        ? `https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${journal.id}`
+        : 'https://dependable-solace-production-75f7.up.railway.app/api/journal/entries';
+      
+      const method = journal ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        await fetchJournal();
+        setEditingJournal(false);
+      } else {
+        alert('Failed to save journal');
+      }
+    } catch (err) {
+      console.error('Error saving journal:', err);
+      alert('Failed to save journal');
     }
   };
 
@@ -343,6 +424,134 @@ export default function TradeDetail() {
               <span className="text-gray-900 dark:text-gray-200">#{trade.id}</span>
             </div>
           </div>
+        </div>
+
+        {/* Journal Section */}
+        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              <Activity className="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400" />
+              Trade Journal
+            </h3>
+            {journal && !editingJournal && (
+              <button
+                onClick={() => setEditingJournal(true)}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          {!journal && !editingJournal ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No journal entry for this trade yet</p>
+              <button
+                onClick={() => setEditingJournal(true)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                Add Journal Entry
+              </button>
+            </div>
+          ) : editingJournal ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Notes & Analysis
+                </label>
+                <textarea
+                  value={journalData.content}
+                  onChange={(e) => setJournalData({ ...journalData, content: e.target.value })}
+                  rows={6}
+                  placeholder="What was your thought process? Why did you take this trade? What did you learn?"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mood
+                </label>
+                <select
+                  value={journalData.mood}
+                  onChange={(e) => setJournalData({ ...journalData, mood: e.target.value as any })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="positive">😊 Positive</option>
+                  <option value="neutral">😐 Neutral</option>
+                  <option value="negative">😟 Negative</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={journalData.tags}
+                  onChange={(e) => setJournalData({ ...journalData, tags: e.target.value })}
+                  placeholder="breakout, momentum, patience, etc."
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={saveJournal}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  Save Journal
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingJournal(false);
+                    if (journal) {
+                      setJournalData({
+                        content: journal.content,
+                        tags: journal.tags.join(', '),
+                        mood: journal.mood,
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{journal?.content}</p>
+              </div>
+
+              {journal?.tags && journal.tags.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {journal.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>Mood:</span>
+                <span className="font-medium">
+                  {journal?.mood === 'positive' && '😊 Positive'}
+                  {journal?.mood === 'neutral' && '😐 Neutral'}
+                  {journal?.mood === 'negative' && '😟 Negative'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
