@@ -23,6 +23,10 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
   const [success, setSuccess] = useState(false);
   const [marketType, setMarketType] = useState<MarketType>('forex');
   
+  const [includeJournal, setIncludeJournal] = useState(false);
+  const [includeSetupPhoto, setIncludeSetupPhoto] = useState(false);
+  const [includeTradePhoto, setIncludeTradePhoto] = useState(false);
+  
   const [formData, setFormData] = useState({
     symbol: '',
     trade_type: 'buy',
@@ -32,6 +36,12 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
     open_time: '',
     close_time: '',
     is_closed: false,
+  });
+  
+  const [journalData, setJournalData] = useState({
+    content: '',
+    tags: '',
+    mood: 'neutral' as 'positive' | 'neutral' | 'negative',
   });
 
   const resetForm = () => {
@@ -45,6 +55,14 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
       close_time: '',
       is_closed: false,
     });
+    setJournalData({
+      content: '',
+      tags: '',
+      mood: 'neutral',
+    });
+    setIncludeJournal(false);
+    setIncludeSetupPhoto(false);
+    setIncludeTradePhoto(false);
     setError('');
     setSuccess(false);
     setMarketType('forex');
@@ -150,6 +168,36 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
           setError(`Failed to create trade: ${response.status}`);
         }
         return;
+      }
+
+      const createdTrade = await response.json();
+
+      // Create journal entry if enabled
+      if (includeJournal && journalData.content.trim()) {
+        try {
+          const journalPayload = {
+            title: `Trade: ${formData.symbol}`,
+            content: journalData.content,
+            tags: journalData.tags.split(',').map(t => t.trim()).filter(Boolean),
+            mood: journalData.mood,
+            trade_id: createdTrade.id,
+          };
+
+          const journalResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/journal/entries', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+            body: JSON.stringify(journalPayload),
+          });
+
+          if (!journalResponse.ok) {
+            console.error('Failed to create journal entry');
+          }
+        } catch (journalError) {
+          console.error('Error creating journal entry:', journalError);
+        }
       }
 
       setSuccess(true);
@@ -378,6 +426,123 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                 <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">This trade is closed</span>
               </label>
             </div>
+
+            {/* Journal Toggle */}
+            <div className="pt-4 border-t dark:border-gray-700">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeJournal}
+                  onChange={(e) => setIncludeJournal(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Add Journal Entry</span>
+              </label>
+            </div>
+
+            {/* Journal Section */}
+            {includeJournal && (
+              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Journal Details</h3>
+                
+                {/* Photo Toggles */}
+                <div className="flex gap-4 mb-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeSetupPhoto}
+                      onChange={(e) => setIncludeSetupPhoto(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Setup Photo</span>
+                  </label>
+                  
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeTradePhoto}
+                      onChange={(e) => setIncludeTradePhoto(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Trade Photo</span>
+                  </label>
+                </div>
+
+                {/* Setup Photo Upload */}
+                {includeSetupPhoto && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Setup Photo (Before Trade)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload your pre-trade setup/analysis</p>
+                  </div>
+                )}
+
+                {/* Trade Photo Upload */}
+                {includeTradePhoto && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Trade Photo (Execution)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload your final trade screenshot</p>
+                  </div>
+                )}
+
+                {/* Journal Content */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Notes & Analysis
+                  </label>
+                  <textarea
+                    value={journalData.content}
+                    onChange={(e) => setJournalData({ ...journalData, content: e.target.value })}
+                    rows={4}
+                    placeholder="What was your thought process? Why did you take this trade? What did you learn?"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Mood */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Mood
+                  </label>
+                  <select
+                    value={journalData.mood}
+                    onChange={(e) => setJournalData({ ...journalData, mood: e.target.value as any })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="positive">😊 Positive</option>
+                    <option value="neutral">😐 Neutral</option>
+                    <option value="negative">😟 Negative</option>
+                  </select>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={journalData.tags}
+                    onChange={(e) => setJournalData({ ...journalData, tags: e.target.value })}
+                    placeholder="breakout, momentum, patience, etc."
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-6">
