@@ -106,8 +106,8 @@ export default function TradeDetail() {
         pre_trade_analysis: '',
         post_trade_analysis: '',
         emotional_state: journalData.mood,
-        mistakes: journalData.tags ? journalData.tags.split(',').map(t => t.trim()).filter(t => t) : [],
-        lessons_learned: [],
+        mistakes: journalData.tags || '',
+        lessons_learned: '',
         screenshot_urls: [],
       };
 
