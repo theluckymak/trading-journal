@@ -578,28 +578,11 @@ export default function TradeDetail() {
             </div>
           </div>
         </div>
+      </main>
+    </div>
+  );
+}
 
-        {/* Metadata */}
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
-            Metadata
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Created</span>
-              <span className="text-gray-900 dark:text-gray-200">{formatDate(trade.created_at)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Trade ID</span>
-              <span className="text-gray-900 dark:text-gray-200">#{trade.id}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Journal Section */}
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               <Activity className="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400" />
               Trade Journal
