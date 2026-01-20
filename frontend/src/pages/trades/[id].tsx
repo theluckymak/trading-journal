@@ -291,13 +291,13 @@ export default function TradeDetail() {
       )}
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Trade Summary Card */}
+        {/* Compact Trade Summary */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{trade.symbol}</h2>
               <span
-                className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                   trade.trade_type === 'buy'
                     ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                     : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
@@ -305,11 +305,19 @@ export default function TradeDetail() {
               >
                 {trade.trade_type.toUpperCase()}
               </span>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  trade.is_closed
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                }`}
+              >
+                {trade.is_closed ? 'Closed' : 'Open'}
+              </span>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net P/L</p>
               <p
-                className={`text-3xl font-bold ${
+                className={`text-4xl font-bold ${
                   isProfitable ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
@@ -317,22 +325,153 @@ export default function TradeDetail() {
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Status Badge */}
-          <div className="mb-6">
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                trade.is_closed
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-              }`}
-            >
-              <Activity className="h-4 w-4 mr-1" />
-              {trade.is_closed ? 'Closed' : 'Open'}
-            </span>
+        {/* Journal Section */}
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              <Activity className="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400" />
+              Trade Journal
+            </h3>
+            {journal && !editingJournal && (
+              <button
+                onClick={() => setEditingJournal(true)}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Edit
+              </button>
+            )}
           </div>
 
-          {/* Trade Details Grid */}
+          {!journal && !editingJournal ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No journal entry for this trade yet</p>
+              <button
+                onClick={() => setEditingJournal(true)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                Add Journal Entry
+              </button>
+            </div>
+          ) : editingJournal ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Notes & Analysis
+                </label>
+                <textarea
+                  value={journalData.content}
+                  onChange={(e) => setJournalData({ ...journalData, content: e.target.value })}
+                  rows={6}
+                  placeholder="What was your thought process? Why did you take this trade? What did you learn?"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mood
+                </label>
+                <select
+                  value={journalData.mood}
+                  onChange={(e) => setJournalData({ ...journalData, mood: e.target.value as any })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="positive">😊 Positive</option>
+                  <option value="neutral">😐 Neutral</option>
+                  <option value="negative">😟 Negative</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={journalData.tags}
+                  onChange={(e) => setJournalData({ ...journalData, tags: e.target.value })}
+                  placeholder="breakout, momentum, patience, etc."
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📸 Setup Photo URL (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/setup-screenshot.png"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📸 Trade Photo URL (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/trade-screenshot.png"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={saveJournal}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  Save Journal
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingJournal(false);
+                    if (journal) {
+                      setJournalData({
+                        content: journal.notes || '',
+                        tags: journal.mistakes || '',
+                        mood: (journal.emotional_state as 'positive' | 'neutral' | 'negative') || 'neutral',
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{journal?.notes}</p>
+              </div>
+
+              {journal?.mistakes && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Mistakes:</p>
+                  <div className="text-gray-800 dark:text-gray-200">
+                    {journal.mistakes}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>Mood:</span>
+                <span className="font-medium">
+                  {journal?.emotional_state === 'positive' && '😊 Positive'}
+                  {journal?.emotional_state === 'neutral' && '😐 Neutral'}
+                  {journal?.emotional_state === 'negative' && '😟 Negative'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Trade Details Grid */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Entry Details */}
             <div className="space-y-4">
@@ -386,6 +525,24 @@ export default function TradeDetail() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
+            Metadata
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Created</span>
+              <span className="text-gray-900 dark:text-gray-200">{formatDate(trade.created_at)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Trade ID</span>
+              <span className="text-gray-900 dark:text-gray-200">#{trade.id}</span>
             </div>
           </div>
         </div>
