@@ -76,7 +76,7 @@ export default function TradeDetail() {
 
   const fetchJournal = async () => {
     try {
-      const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${id}`, {
+      const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/journal/entries/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
@@ -109,7 +109,7 @@ export default function TradeDetail() {
         screenshot_urls: [],
       };
 
-      const url = `https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${id}`;
+      const url = `https://dependable-solace-production-75f7.up.railway.app/journal/entries/${id}`;
       const method = 'POST';
 
       const response = await fetch(url, {
@@ -128,11 +128,15 @@ export default function TradeDetail() {
       } else {
         const errorData = await response.json();
         console.error('Save error:', errorData);
-        alert(`Failed to save journal: ${errorData.detail || 'Unknown error'}`);
+        const errorMessage = typeof errorData.detail === 'string' 
+          ? errorData.detail 
+          : errorData.detail?.msg || errorData.message || JSON.stringify(errorData.detail) || 'Unknown error';
+        alert(`Failed to save journal: ${errorMessage}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving journal:', err);
-      alert('Failed to save journal');
+      const errorMessage = err.message || 'Network error occurred';
+      alert(`Failed to save journal: ${errorMessage}`);
     }
   };
 
