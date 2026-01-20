@@ -578,18 +578,11 @@ export default function TradeDetail() {
                 </div>
               )}
 
-              {journal?.tags && journal.tags.length > 0 && (
+              {journal?.mistakes && (
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {journal.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Mistakes:</p>
+                  <div className="text-gray-800 dark:text-gray-200">
+                    {journal.mistakes}
                   </div>
                 </div>
               )}
