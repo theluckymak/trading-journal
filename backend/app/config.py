@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = ""  # Optional, defaults to SMTP_USER
+    
+    @property
+    def get_from_email(self) -> str:
+        """Get the from email, defaulting to SMTP_USER if not set."""
+        return self.FROM_EMAIL if self.FROM_EMAIL else self.SMTP_USER
     
     # Environment
     ENVIRONMENT: str = "development"

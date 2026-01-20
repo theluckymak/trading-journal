@@ -266,3 +266,26 @@ async def oauth_login(
         "token_type": "bearer"
     }
 
+
+@router.get("/verify-email", status_code=status.HTTP_200_OK)
+async def verify_email(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """Verify user email with token."""
+    auth_service = AuthService(db)
+    auth_service.verify_email(token)
+    
+    return {"message": "Email verified successfully"}
+
+
+@router.post("/resend-verification", status_code=status.HTTP_200_OK)
+async def resend_verification(
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """Resend verification email."""
+    auth_service = AuthService(db)
+    auth_service.resend_verification_email(email)
+    
+    return {"message": "Verification email sent"}
