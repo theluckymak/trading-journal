@@ -81,7 +81,7 @@ class AuthService:
         verification_token = secrets.token_urlsafe(32)
         verification_expires = datetime.utcnow() + timedelta(hours=24)
         
-        # Create user
+        # Create user (temporarily set is_verified=True to bypass email verification)
         user = User(
             email=email,
             hashed_password=hashed_password,
@@ -89,7 +89,7 @@ class AuthService:
             role=UserRole.USER,
             verification_token=verification_token,
             verification_token_expires=verification_expires,
-            is_verified=False
+            is_verified=True  # Temporarily True - change to False once email works
         )
         
         self.db.add(user)
@@ -130,12 +130,13 @@ class AuthService:
             return None
         
         # Check if email is verified (skip for OAuth users)
-        if not user.oauth_provider and not user.is_verified:
-            log_security_event("login_failed", {"email": email, "reason": "email_not_verified"})
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Please verify your email before logging in"
-            )
+        # Temporarily disabled - uncomment when email verification is working
+        # if not user.oauth_provider and not user.is_verified:
+        #     log_security_event("login_failed", {"email": email, "reason": "email_not_verified"})
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail="Please verify your email before logging in"
+        #     )
         
         if not password_service.verify_password(password, user.hashed_password):
             log_security_event("login_failed", {"email": email, "reason": "invalid_password"})
