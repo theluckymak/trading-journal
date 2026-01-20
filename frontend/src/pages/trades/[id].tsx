@@ -544,9 +544,9 @@ export default function TradeDetail() {
                     setEditingJournal(false);
                     if (journal) {
                       setJournalData({
-                        content: journal.content,
-                        tags: journal.tags.join(', '),
-                        mood: journal.mood,
+                        content: journal.notes || '',
+                        tags: journal.mistakes || '',
+                        mood: (journal.emotional_state as 'positive' | 'neutral' | 'negative') || 'neutral',
                       });
                     }
                   }}
