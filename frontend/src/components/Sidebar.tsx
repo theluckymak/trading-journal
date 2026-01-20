@@ -16,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -28,8 +30,9 @@ export default function Sidebar() {
   
   // Modal states
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Initialize state from localStorage immediately
+  // Initialize state from localStorage immediately (desktop only)
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('sidebarCollapsed');
@@ -86,7 +89,91 @@ export default function Sidebar() {
   const isActive = (href: string) => router.pathname === href;
 
   return (
-    <div className={`h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out`}>
+    <>
+      {/* Mobile Top Bar */}
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+        <div className="flex items-center justify-between p-4">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Trading Journal</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTradeModal(true)}
+              className="p-2 bg-blue-600 text-white rounded-lg"
+            >
+              <Plus size={20} />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="border-t dark:border-gray-700 p-4">
+            <nav className="space-y-1">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                      active
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+              
+              {user?.role === 'admin' && adminItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                      active
+                        ? 'bg-orange-600 text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+              
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+              >
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className={`hidden md:flex h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-col transition-all duration-300 ease-in-out`}>
       {/* Logo */}
       <div className="p-6 border-b dark:border-gray-700">
         <div className="flex items-center justify-between mb-2">
@@ -201,6 +288,7 @@ export default function Sidebar() {
         onClose={() => setShowTradeModal(false)}
         onSuccess={() => router.push('/dashboard')}
       />
-    </div>
+      </div>
+    </>
   );
 }
