@@ -21,8 +21,8 @@ COPY . .
 EXPOSE 8000
 
 # Create startup script that runs migrations then starts the app
-RUN echo '#!/bin/bash\nalembic upgrade head\nuvicorn app.main:app --host 0.0.0.0 --port 8000' > /app/start.sh && \
+RUN echo '#!/bin/sh\nalembic upgrade head\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000' > /app/start.sh && \
     chmod +x /app/start.sh
 
 # Run application with migrations
-CMD ["/app/start.sh"]
+CMD ["/bin/sh", "/app/start.sh"]
