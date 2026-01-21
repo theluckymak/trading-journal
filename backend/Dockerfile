@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
 WORKDIR /app
+# Force rebuild - 2026-01-21
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
