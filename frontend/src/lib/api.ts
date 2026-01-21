@@ -5,7 +5,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 // Railway backend URL - hardcoded to bypass env var issues
-const RAILWAY_BACKEND = 'https://dependable-solace-production-75f7.up.railway.app';
+const RAILWAY_BACKEND = 'https://trading-journal-production-8248.up.railway.app';
 
 // Use backend service name for server-side calls, Railway backend for browser
 const API_URL = typeof window === 'undefined' 

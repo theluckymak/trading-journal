@@ -2,8 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://dependable-solace-production-75f7.up.railway.app',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://trading-journal-production-8248.up.railway.app',
   },
 }
 
 module.exports = nextConfig
+
