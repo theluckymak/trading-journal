@@ -1,10 +1,10 @@
 /**
  * API client with authentication support.
- * Last updated: 2026-01-19
+ * Last updated: 2026-01-21
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Railway backend URL - hardcoded to bypass env var issues
+// Railway backend URL - v2 with correct domain
 const RAILWAY_BACKEND = 'https://trading-journal-production-8248.up.railway.app';
 
 // Use backend service name for server-side calls, Railway backend for browser
