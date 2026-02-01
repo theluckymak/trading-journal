@@ -7,6 +7,7 @@ Create Date: 2026-01-16
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -17,18 +18,23 @@ depends_on = None
 
 
 def upgrade():
-    # Create chat_messages table
-    op.create_table(
-        'chat_messages',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('message', sa.Text(), nullable=False),
-        sa.Column('is_admin', sa.Boolean(), nullable=False, server_default='false'),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_chat_messages_id'), 'chat_messages', ['id'], unique=False)
+    # Check if table already exists before creating
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    
+    if 'chat_messages' not in inspector.get_table_names():
+        # Create chat_messages table only if it doesn't exist
+        op.create_table(
+            'chat_messages',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('user_id', sa.Integer(), nullable=False),
+            sa.Column('message', sa.Text(), nullable=False),
+            sa.Column('is_admin', sa.Boolean(), nullable=False, server_default='false'),
+            sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+            sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
+        op.create_index(op.f('ix_chat_messages_id'), 'chat_messages', ['id'], unique=False)
 
 
 def downgrade():
