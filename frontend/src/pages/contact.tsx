@@ -75,7 +75,7 @@ export default function ContactPage() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen p-6 lg:p-8 max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Contact Support
