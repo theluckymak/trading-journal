@@ -81,7 +81,7 @@ class AuthService:
         verification_token = secrets.token_urlsafe(32)
         verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
         
-        # Create user (set is_verified=True to allow login while email verification is optional)
+        # Create user - is_verified=False until they click the email link
         user = User(
             email=email,
             hashed_password=hashed_password,
@@ -89,7 +89,7 @@ class AuthService:
             role=UserRole.USER,
             verification_token=verification_token,
             verification_token_expires=verification_expires,
-            is_verified=True  # Set to True - users can login immediately without email verification
+            is_verified=False  # User must verify email, but can still login
         )
         
         self.db.add(user)
