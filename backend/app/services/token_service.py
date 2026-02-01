@@ -1,7 +1,7 @@
 """
 JWT token service for access and refresh tokens.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 
@@ -29,7 +29,7 @@ class TokenService:
             Encoded JWT access token
         """
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
         to_encode.update({
             "exp": expire,
             "type": "access"
@@ -47,7 +47,7 @@ class TokenService:
             Encoded JWT refresh token
         """
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+        expire = datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
         to_encode.update({
             "exp": expire,
             "type": "refresh"
@@ -72,7 +72,7 @@ class TokenService:
     
     def get_refresh_token_expiry(self) -> datetime:
         """Get expiry datetime for a refresh token."""
-        return datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+        return datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
 
 
 # Global instance

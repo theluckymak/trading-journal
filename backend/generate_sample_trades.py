@@ -2,7 +2,7 @@
 Generate sample trades with journals for testing
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys
 import os
 
@@ -124,7 +124,7 @@ def generate_trades(user_email: str, num_trades: int = 100, win_rate: float = 0.
         random.shuffle(outcomes)
         
         # Generate trades over last 90 days
-        end_date = datetime.utcnow()
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=90)
         
         created_trades = []

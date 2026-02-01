@@ -3,7 +3,7 @@ Structured logging configuration for the application.
 """
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 from app.middleware.request_id import get_request_id
 
@@ -21,7 +21,7 @@ class StructuredFormatter(logging.Formatter):
         
         # Build structured log data
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "request_id": request_id,
             "logger": record.name,

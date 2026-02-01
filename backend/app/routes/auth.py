@@ -69,11 +69,14 @@ async def login(
     )
     
     # Set refresh token as HttpOnly cookie
+    from app.config import settings
+    secure_cookie = settings.ENVIRONMENT == "production"
+    
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,  # Set to True in production with HTTPS
+        secure=secure_cookie,  # True only in production with HTTPS
         samesite="lax",
         max_age=30 * 24 * 60 * 60  # 30 days
     )

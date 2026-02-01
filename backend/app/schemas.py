@@ -137,7 +137,6 @@ class TradeUpdate(BaseModel):
     commission: Optional[float] = None
     swap: Optional[float] = None
     is_closed: Optional[bool] = None
-    swap: Optional[float] = None
 
 
 class TradeResponse(BaseModel):

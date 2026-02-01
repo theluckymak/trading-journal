@@ -1,7 +1,7 @@
 """
 Authentication service for user registration, login, and token management.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -79,7 +79,7 @@ class AuthService:
         
         # Generate verification token
         verification_token = secrets.token_urlsafe(32)
-        verification_expires = datetime.utcnow() + timedelta(hours=24)
+        verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
         
         # Create user (temporarily set is_verified=True to bypass email verification)
         user = User(
@@ -143,7 +143,7 @@ class AuthService:
             return None
         
         # Update last login
-        user.last_login_at = datetime.utcnow()
+        user.last_login_at = datetime.now(timezone.utc)
         self.db.commit()
         
         logger.info(f"User logged in: {user.id}")
@@ -211,7 +211,7 @@ class AuthService:
         token_record = self.db.query(RefreshToken).filter(
             RefreshToken.token == refresh_token,
             RefreshToken.is_revoked == False,
-            RefreshToken.expires_at > datetime.utcnow()
+            RefreshToken.expires_at > datetime.now(timezone.utc)
         ).first()
         
         if not token_record:
@@ -249,7 +249,7 @@ class AuthService:
             return False
         
         token_record.is_revoked = True
-        token_record.revoked_at = datetime.utcnow()
+        token_record.revoked_at = datetime.now(timezone.utc)
         self.db.commit()
         
         return True
@@ -269,7 +269,7 @@ class AuthService:
             RefreshToken.is_revoked == False
         ).update({
             "is_revoked": True,
-            "revoked_at": datetime.utcnow()
+            "revoked_at": datetime.now(timezone.utc)
         })
         
         self.db.commit()
@@ -316,7 +316,7 @@ class AuthService:
                 detail="Email already verified"
             )
         
-        if user.verification_token_expires and user.verification_token_expires < datetime.utcnow():
+        if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Verification token has expired"
@@ -359,7 +359,7 @@ class AuthService:
         
         # Generate new verification token
         verification_token = secrets.token_urlsafe(32)
-        verification_expires = datetime.utcnow() + timedelta(hours=24)
+        verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
         
         user.verification_token = verification_token
         user.verification_token_expires = verification_expires
