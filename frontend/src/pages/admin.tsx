@@ -144,7 +144,8 @@ export default function AdminPage() {
 
   return (
     <Layout>
-      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="min-h-screen p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
@@ -273,6 +274,7 @@ export default function AdminPage() {
             <strong>Admin Privileges:</strong> You can view and respond to each user's conversation individually. Your responses are marked as "Support"
             with your name and visible only to the selected user. Messages refresh automatically every 3 seconds.
           </p>
+        </div>
         </div>
       </div>
     </Layout>

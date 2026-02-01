@@ -75,7 +75,8 @@ export default function ContactPage() {
 
   return (
     <Layout>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="min-h-screen p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">
             Contact Support
@@ -101,6 +102,7 @@ export default function ContactPage() {
             <strong>Privacy:</strong> This is a private conversation. Only you and support staff can see your messages.
             Support responses will be marked with "Support" badge and appear in real-time.
           </p>
+        </div>
         </div>
       </div>
     </Layout>
