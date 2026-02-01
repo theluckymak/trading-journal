@@ -97,22 +97,22 @@ export default function Sidebar() {
       <div className="md:hidden bg-[#0a0f1a]">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className={`${iconStyle} bg-gradient-to-br from-cyan-400/80 to-blue-500/80`}>
-              <TrendingUp className="w-5 h-5 text-white" />
+            <div className={`${iconStyle} bg-white/[0.08]`}>
+              <TrendingUp className="w-5 h-5 text-cyan-400/70" />
             </div>
             <span className="text-base font-semibold text-white">MakTrades</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowTradeModal(true)}
-              className={`${iconStyle} bg-white/10 text-cyan-400/80 hover:bg-white/15 transition-colors`}
+              className={`${iconStyle} bg-white/[0.08] text-cyan-400/70 hover:bg-white/[0.12] transition-colors`}
               aria-label="Add Trade"
             >
               <Plus className="w-5 h-5" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`${iconStyle} bg-white/10 text-slate-400 hover:bg-white/15 transition-colors`}
+              className={`${iconStyle} bg-white/[0.08] text-slate-400 hover:bg-white/[0.12] transition-colors`}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -131,18 +131,14 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-2 py-2 rounded-2xl transition-all ${
-                      active
-                        ? 'bg-white/5 text-white'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                    className="flex items-center gap-3 px-2 py-2 rounded-2xl transition-all text-slate-400 hover:text-slate-200"
                   >
                     <div className={`${iconStyle} ${
-                      active ? 'bg-gradient-to-br from-cyan-400/80 to-blue-500/80 text-white' : 'bg-white/10'
+                      active ? 'bg-white/[0.12] text-cyan-400/70' : 'bg-white/[0.06] hover:bg-white/[0.1]'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className={`text-sm font-medium ${active ? 'text-white' : ''}`}>{item.label}</span>
                   </Link>
                 );
               })}
@@ -155,27 +151,23 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-2 py-2 rounded-2xl transition-all ${
-                      active
-                        ? 'bg-white/5 text-white'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                    className="flex items-center gap-3 px-2 py-2 rounded-2xl transition-all text-slate-400 hover:text-slate-200"
                   >
                     <div className={`${iconStyle} ${
-                      active ? 'bg-gradient-to-br from-orange-400/80 to-red-500/80 text-white' : 'bg-white/10'
+                      active ? 'bg-white/[0.12] text-orange-400/70' : 'bg-white/[0.06] hover:bg-white/[0.1]'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className={`text-sm font-medium ${active ? 'text-white' : ''}`}>{item.label}</span>
                   </Link>
                 );
               })}
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-2 py-2 text-slate-400 hover:text-red-400/80 rounded-2xl transition-all"
+                className="w-full flex items-center gap-3 px-2 py-2 text-slate-400 hover:text-red-400/70 rounded-2xl transition-all"
               >
-                <div className={`${iconStyle} bg-white/10`}>
+                <div className={`${iconStyle} bg-white/[0.06]`}>
                   <LogOut className="w-5 h-5" />
                 </div>
                 <span className="text-sm font-medium">Logout</span>
@@ -191,15 +183,15 @@ export default function Sidebar() {
         <div className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`${iconStyle} bg-gradient-to-br from-cyan-400/80 to-blue-500/80`}>
-                <TrendingUp className="w-5 h-5 text-white" />
+              <div className={`${iconStyle} bg-white/[0.08]`}>
+                <TrendingUp className="w-5 h-5 text-cyan-400/70" />
               </div>
               {!isCollapsed && <span className="text-lg font-semibold text-white">MakTrades</span>}
             </div>
             {!isCollapsed && (
               <button
                 onClick={toggleSidebar}
-                className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/10 hover:bg-white/15 text-slate-500 transition-colors flex items-center justify-center"
+                className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-500 transition-colors flex items-center justify-center"
                 title="Collapse sidebar"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -212,7 +204,7 @@ export default function Sidebar() {
         {isCollapsed && (
           <button
             onClick={toggleSidebar}
-            className="mx-auto mt-1 w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/10 hover:bg-white/15 text-slate-500 transition-colors flex items-center justify-center"
+            className="mx-auto mt-1 w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-500 transition-colors flex items-center justify-center"
             title="Expand sidebar"
           >
             <ChevronRight className="w-4 h-4" />
@@ -221,17 +213,14 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 overflow-y-auto mt-4">
-          {/* Quick Add Button */}
-          <div className="mb-5 px-1">
+          {/* Quick Add Button - just the icon, no wrapper */}
+          <div className="mb-5 flex justify-center">
             <button
               onClick={() => setShowTradeModal(true)}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 bg-white/5 text-cyan-400/80 hover:bg-white/10 rounded-2xl transition-all duration-200`}
-              title={isCollapsed ? 'Add Trade' : ''}
+              className={`${iconStyle} bg-white/[0.08] text-cyan-400/70 hover:bg-white/[0.12] transition-all duration-200`}
+              title="Add Trade"
             >
-              <div className={`${iconStyle} bg-gradient-to-br from-cyan-400/80 to-blue-500/80`}>
-                <Plus className="w-5 h-5 text-white" />
-              </div>
-              {!isCollapsed && <span className="text-sm font-medium">Add Trade</span>}
+              <Plus className="w-5 h-5" />
             </button>
           </div>
 
@@ -244,21 +233,17 @@ export default function Sidebar() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 rounded-2xl transition-all duration-200 group ${
-                      active
-                        ? 'bg-white/5 text-white'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 rounded-2xl transition-all duration-200 group text-slate-400 hover:text-slate-200`}
                     title={isCollapsed ? item.label : ''}
                   >
                     <div className={`${iconStyle} transition-all ${
                       active 
-                        ? 'bg-gradient-to-br from-cyan-400/80 to-blue-500/80 text-white' 
-                        : 'bg-white/10 group-hover:bg-white/15'
+                        ? 'bg-white/[0.12] text-cyan-400/70' 
+                        : 'bg-white/[0.06] group-hover:bg-white/[0.1]'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+                    {!isCollapsed && <span className={`text-sm font-medium ${active ? 'text-white' : ''}`}>{item.label}</span>}
                   </Link>
                 </li>
               );
@@ -282,21 +267,17 @@ export default function Sidebar() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 rounded-2xl transition-all duration-200 group ${
-                          active
-                            ? 'bg-white/5 text-white'
-                            : 'text-slate-400 hover:text-slate-200'
-                        }`}
+                        className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 rounded-2xl transition-all duration-200 group text-slate-400 hover:text-slate-200`}
                         title={isCollapsed ? item.label : ''}
                       >
                         <div className={`${iconStyle} transition-all ${
                           active 
-                            ? 'bg-gradient-to-br from-orange-400/80 to-red-500/80 text-white' 
-                            : 'bg-white/10 group-hover:bg-white/15'
+                            ? 'bg-white/[0.12] text-orange-400/70' 
+                            : 'bg-white/[0.06] group-hover:bg-white/[0.1]'
                         }`}>
                           <Icon className="w-5 h-5" />
                         </div>
-                        {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+                        {!isCollapsed && <span className={`text-sm font-medium ${active ? 'text-white' : ''}`}>{item.label}</span>}
                       </Link>
                     </li>
                   );
@@ -310,10 +291,10 @@ export default function Sidebar() {
         <div className="p-3">
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 text-slate-400 hover:text-red-400/80 rounded-2xl transition-all duration-200 group`}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-2 py-2 text-slate-400 hover:text-red-400/70 rounded-2xl transition-all duration-200 group`}
             title={isCollapsed ? 'Logout' : ''}
           >
-            <div className={`${iconStyle} bg-white/10 group-hover:bg-red-500/15 transition-all`}>
+            <div className={`${iconStyle} bg-white/[0.06] group-hover:bg-white/[0.1] transition-all`}>
               <LogOut className="w-5 h-5" />
             </div>
             {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
@@ -323,12 +304,12 @@ export default function Sidebar() {
         {/* User Info */}
         {!isCollapsed && user && (
           <div className="p-4">
-            <div className="flex items-center gap-3 px-2 py-3 rounded-2xl bg-white/5">
-              <div className={`${iconStyle} bg-gradient-to-br from-slate-600 to-slate-700 text-sm font-bold text-white uppercase`}>
+            <div className="flex items-center gap-3 px-2 py-3 rounded-2xl bg-white/[0.04]">
+              <div className={`${iconStyle} bg-white/[0.08] text-sm font-bold text-slate-400 uppercase`}>
                 {user.email?.charAt(0) || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                <p className="text-sm font-medium text-slate-300 truncate">{user.email}</p>
                 <p className="text-[11px] text-slate-500">{user.role || 'Trader'}</p>
               </div>
             </div>
