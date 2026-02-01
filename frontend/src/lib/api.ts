@@ -4,13 +4,8 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Railway backend URL - v2 with correct domain
-const RAILWAY_BACKEND = 'https://dependable-solace-production-75f7.up.railway.app';
-
-// Use backend service name for server-side calls, Railway backend for browser
-const API_URL = typeof window === 'undefined' 
-  ? (process.env.NEXT_PUBLIC_API_URL_SERVER || 'http://backend:8000')
-  : (process.env.NEXT_PUBLIC_API_URL || RAILWAY_BACKEND);
+// Railway backend URL - always use the production backend
+const API_URL = 'https://dependable-solace-production-75f7.up.railway.app';
 
 class ApiClient {
   private client: AxiosInstance;
