@@ -144,22 +144,20 @@ export default function AdminPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-full max-w-7xl mx-auto px-4">
-        {/* Header - always visible */}
-        <div className="flex-shrink-0 py-4 bg-[#0a0f1a]">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
             <Shield className="h-8 w-8 text-primary-600" />
             Admin Panel
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-400">
             Manage support chat and view system statistics
           </p>
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto pb-4">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
@@ -276,7 +274,6 @@ export default function AdminPage() {
             with your name and visible only to the selected user. Messages refresh automatically every 3 seconds.
           </p>
         </div>
-        </div>{/* End scrollable content */}
       </div>
     </Layout>
   );
