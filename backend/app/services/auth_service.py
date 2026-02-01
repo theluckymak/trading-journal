@@ -77,9 +77,10 @@ class AuthService:
         # Hash password
         hashed_password = password_service.hash_password(password)
         
+        # TODO: Re-enable email verification after migrations run successfully
         # Generate verification token
-        verification_token = secrets.token_urlsafe(32)
-        verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+        # verification_token = secrets.token_urlsafe(32)
+        # verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
         
         # Create user (temporarily set is_verified=True to bypass email verification)
         user = User(
@@ -87,8 +88,8 @@ class AuthService:
             hashed_password=hashed_password,
             full_name=full_name,
             role=UserRole.USER,
-            verification_token=verification_token,
-            verification_token_expires=verification_expires,
+            # verification_token=verification_token,
+            # verification_token_expires=verification_expires,
             is_verified=True  # Temporarily True - change to False once email works
         )
         
@@ -97,12 +98,13 @@ class AuthService:
         self.db.refresh(user)
         
         # Send verification email (non-blocking - don't fail registration if email fails)
-        try:
-            self.email_service.send_verification_email(email, verification_token)
-            logger.info(f"Verification email sent to: {email}")
-        except Exception as e:
-            logger.error(f"Failed to send verification email to {email}: {str(e)}")
-            # Don't fail registration if email fails - user can resend later
+        # TODO: Re-enable after migrations run
+        # try:
+        #     self.email_service.send_verification_email(email, verification_token)
+        #     logger.info(f"Verification email sent to: {email}")
+        # except Exception as e:
+        #     logger.error(f"Failed to send verification email to {email}: {str(e)}")
+        #     # Don't fail registration if email fails - user can resend later
         
         logger.info(f"New user registered: {user.id}")
         return user
@@ -287,92 +289,86 @@ class AuthService:
         """
         return self.db.query(User).filter(User.id == user_id).first()
     
+    # TODO: Re-enable after verification_token columns are added via migrations
     def verify_email(self, token: str) -> bool:
         """
         Verify user email with token.
-        
-        Args:
-            token: Verification token
-            
-        Returns:
-            True if verified successfully
-            
-        Raises:
-            HTTPException: If token is invalid or expired
+        TEMPORARILY DISABLED - Re-enable after migrations run successfully
         """
-        user = self.db.query(User).filter(
-            User.verification_token == token
-        ).first()
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid verification token"
-            )
-        
-        if user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already verified"
-            )
-        
-        if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Verification token has expired"
-            )
-        
-        # Mark as verified
-        user.is_verified = True
-        user.verification_token = None
-        user.verification_token_expires = None
-        self.db.commit()
-        
-        return True
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Email verification is temporarily disabled"
+        )
+        # user = self.db.query(User).filter(
+        #     User.verification_token == token
+        # ).first()
+        # 
+        # if not user:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Invalid verification token"
+        #     )
+        # 
+        # if user.is_verified:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Email already verified"
+        #     )
+        # 
+        # if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Verification token has expired"
+        #     )
+        # 
+        # # Mark as verified
+        # user.is_verified = True
+        # user.verification_token = None
+        # user.verification_token_expires = None
+        # self.db.commit()
+        # 
+        # return True
     
+    # TODO: Re-enable after verification_token columns are added via migrations
     def resend_verification_email(self, email: str) -> bool:
         """
         Resend verification email to user.
-        
-        Args:
-            email: User email
-            
-        Returns:
-            True if email sent successfully
-            
-        Raises:
-            HTTPException: If user not found or already verified
+        TEMPORARILY DISABLED - Re-enable after migrations run successfully
         """
-        user = self.db.query(User).filter(User.email == email).first()
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        if user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already verified"
-            )
-        
-        # Generate new verification token
-        verification_token = secrets.token_urlsafe(32)
-        verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
-        
-        user.verification_token = verification_token
-        user.verification_token_expires = verification_expires
-        self.db.commit()
-        
-        # Send verification email (non-blocking)
-        try:
-            self.email_service.send_verification_email(email, verification_token)
-            logger.info(f"Verification email resent to: {email}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to resend verification email to {email}: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email. Please try again later."
-            )
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Email verification is temporarily disabled"
+        )
+        # user = self.db.query(User).filter(User.email == email).first()
+        # 
+        # if not user:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_404_NOT_FOUND,
+        #         detail="User not found"
+        #     )
+        # 
+        # if user.is_verified:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Email already verified"
+        #     )
+        # 
+        # # Generate new verification token
+        # verification_token = secrets.token_urlsafe(32)
+        # verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+        # 
+        # user.verification_token = verification_token
+        # user.verification_token_expires = verification_expires
+        # self.db.commit()
+        # 
+        # # Send verification email (non-blocking)
+        # try:
+        #     self.email_service.send_verification_email(email, verification_token)
+        #     logger.info(f"Verification email resent to: {email}")
+        #     return True
+        # except Exception as e:
+        #     logger.error(f"Failed to resend verification email to {email}: {str(e)}")
+        #     raise HTTPException(
+        #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        #         detail="Failed to send verification email. Please try again later."
+        #     )
