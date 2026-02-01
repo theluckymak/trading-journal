@@ -50,6 +50,9 @@ class ChatService:
         db.commit()
         db.refresh(chat_message)
         
+        # Eagerly load the user relationship to avoid lazy loading issues
+        _ = chat_message.user
+        
         return chat_message
     
     @staticmethod
