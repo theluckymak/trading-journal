@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # CORS - can be overridden in .env
-    # For production, set: CORS_ORIGINS=https://maktrades.app,https://your-backend-domain.railway.app
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    # For production, set: CORS_ORIGINS=https://maktrades.app,https://your-api-domain.railway.app
+    # For Railway, this MUST be set in environment variables, not defaults
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,https://maktrades.app"
     
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:

@@ -2,7 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://trading-journal-production-8248.up.railway.app',
+    // For Railway: Set NEXT_PUBLIC_API_URL in environment variables
+    // Default to your Railway backend URL
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://trading-journal-backend.railway.app',
   },
 }
 
