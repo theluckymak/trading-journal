@@ -44,6 +44,24 @@ class AdminStatsResponse(BaseModel):
     admin_count: int
 
 
+# Debug endpoint
+@router.get("/debug")
+def debug_info(current_user: User = Depends(get_current_user)):
+    """Debug endpoint to check user role."""
+    return {
+        "user_id": current_user.id,
+        "email": current_user.email,
+        "role_raw": str(current_user.role),
+        "role_type": str(type(current_user.role)),
+        "role_value": current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        "is_admin_direct": current_user.role == UserRole.ADMIN,
+        "is_admin_str": str(current_user.role) == "ADMIN",
+        "is_admin_value": (current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)) == "ADMIN",
+        "UserRole_ADMIN": str(UserRole.ADMIN),
+        "UserRole_ADMIN_value": UserRole.ADMIN.value,
+    }
+
+
 # Helper function to check admin role
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Require admin role for route access."""
