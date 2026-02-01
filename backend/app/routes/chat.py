@@ -47,7 +47,8 @@ class AdminStatsResponse(BaseModel):
 # Helper function to check admin role
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Require admin role for route access."""
-    if current_user.role != UserRole.ADMIN:
+    user_role_str = str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role)
+    if user_role_str.upper() != "ADMIN":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -67,7 +68,11 @@ def send_message(
     Regular users: message goes to their own conversation.
     Admins: must specify conversation_user_id to respond to a specific user.
     """
-    is_admin = current_user.role == UserRole.ADMIN
+    # Check admin status - handle both enum and string comparison
+    user_role_str = str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role)
+    is_admin = user_role_str.upper() == "ADMIN"
+    
+    print(f"[CHAT] User {current_user.id} role: {current_user.role} (str: {user_role_str}), is_admin: {is_admin}")
     
     # Determine which conversation this message belongs to
     if is_admin:
@@ -113,7 +118,8 @@ def get_messages(
     Admins can specify conversation_user_id to see a specific user's conversation.
     Returns messages in chronological order (oldest first).
     """
-    is_admin = current_user.role == UserRole.ADMIN
+    user_role_str = str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role)
+    is_admin = user_role_str.upper() == "ADMIN"
     
     # Non-admin users can only see their own conversation
     if not is_admin and conversation_user_id and conversation_user_id != current_user.id:

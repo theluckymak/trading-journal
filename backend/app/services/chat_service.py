@@ -140,7 +140,9 @@ class ChatService:
             )
         
         # Check permissions: admin can delete any, user can only delete own
-        if user_role != UserRole.ADMIN and message.user_id != user_id:
+        user_role_str = str(user_role.value) if hasattr(user_role, 'value') else str(user_role)
+        is_admin = user_role_str.upper() == "ADMIN"
+        if not is_admin and message.user_id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to delete this message"
