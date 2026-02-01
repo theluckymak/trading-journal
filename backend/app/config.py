@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # CORS - Frontend URLs that can access this API
     # Frontend: https://maktrades.app (trading-journal service)
     # Backend: https://dependable-solace-production-75f7.up.railway.app
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,https://maktrades.app,https://trading-journal.railway.app,https://dependable-solace-production-75f7.up.railway.app"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,https://maktrades.app,https://www.maktrades.app,https://trading-journal.railway.app,https://dependable-solace-production-75f7.up.railway.app"
     
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
