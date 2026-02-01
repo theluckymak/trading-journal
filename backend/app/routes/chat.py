@@ -1,7 +1,7 @@
 """
 Chat API routes for support system.
 """
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 class ChatMessageCreate(BaseModel):
     """Schema for creating a chat message."""
     message: str = Field(..., min_length=1, max_length=5000)
-    conversation_user_id: int = Field(default=None, description="User ID for the conversation (admin only)")
+    conversation_user_id: Optional[int] = Field(default=None, description="User ID for the conversation (admin only)")
 
 
 class ChatMessageResponse(BaseModel):
