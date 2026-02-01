@@ -104,6 +104,10 @@ class AuthService:
             logger.error(f"Failed to send verification email to {email}: {str(e)}")
             # Don't fail registration if email fails - user can resend later
         
+        # Log verification link for development/testing when SMTP is not configured
+        logger.warning(f"EMAIL VERIFICATION TOKEN for {email}: {verification_token}")
+        logger.warning(f"Verification URL: https://maktrades.app/auth/verify-email?token={verification_token}")
+        
         logger.info(f"New user registered: {user.id}")
         return user
     
