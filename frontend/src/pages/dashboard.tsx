@@ -58,7 +58,7 @@ const WinRateRing = ({ percentage }: { percentage: number }) => {
           cx="56"
           cy="56"
           r={radius}
-          stroke="rgba(255, 255, 255, 0.1)"
+          stroke="rgba(255, 255, 255, 0.08)"
           strokeWidth="8"
           fill="none"
         />
@@ -66,7 +66,7 @@ const WinRateRing = ({ percentage }: { percentage: number }) => {
           cx="56"
           cy="56"
           r={radius}
-          stroke="#FACC15"
+          stroke="url(#gradient)"
           strokeWidth="8"
           fill="none"
           strokeLinecap="round"
@@ -74,6 +74,12 @@ const WinRateRing = ({ percentage }: { percentage: number }) => {
           strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-out"
         />
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+        </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-xl font-bold text-white">{percentage.toFixed(1)}%</span>
@@ -105,12 +111,12 @@ const MiniCalendar = ({ tradingDays }: { tradingDays: Date[] }) => {
   return (
     <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-semibold">Trading Activity</h3>
-        <span className="text-gray-400 text-sm">{monthName}</span>
+        <h3 className="text-slate-200 font-medium">Trading Activity</h3>
+        <span className="text-slate-500 text-sm">{monthName}</span>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {days.map(day => (
-          <div key={day} className="text-xs text-gray-500 py-1">{day}</div>
+          <div key={day} className="text-xs text-slate-600 py-1">{day}</div>
         ))}
         {Array.from({ length: adjustedFirstDay }).map((_, i) => (
           <div key={`empty-${i}`} className="py-1" />
@@ -124,10 +130,10 @@ const MiniCalendar = ({ tradingDays }: { tradingDays: Date[] }) => {
               key={day}
               className={`py-1 text-sm rounded-full transition-all ${
                 isToday
-                  ? 'bg-yellow-500 text-gray-900 font-bold'
+                  ? 'bg-cyan-500/80 text-white font-bold'
                   : hasTraded
-                  ? 'bg-blue-600/50 text-white'
-                  : 'text-gray-400 hover:bg-white/5'
+                  ? 'bg-white/10 text-cyan-300'
+                  : 'text-slate-500 hover:bg-white/5'
               }`}
             >
               {day}
@@ -195,10 +201,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="mt-4 text-gray-400">Loading your dashboard...</p>
+            <div className="w-16 h-16 border-4 border-cyan-500/60 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="mt-4 text-slate-500">Loading your dashboard...</p>
           </div>
         </div>
       </Layout>
@@ -211,26 +217,26 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6 lg:p-8">
+      <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">
-              {getGreeting()}, <span className="text-yellow-400">{userName}!</span>
+            <h1 className="text-2xl font-semibold text-white mb-1">
+              {getGreeting()}, <span className="text-cyan-400">{userName}</span>
             </h1>
-            <p className="text-gray-400">Ready for today's market challenges</p>
+            <p className="text-slate-500 text-sm">Ready for today's market challenges</p>
           </div>
-          <div className="flex items-center gap-4 mt-4 lg:mt-0">
+          <div className="flex items-center gap-3 mt-4 lg:mt-0">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Search trades..."
-                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 w-64"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-5 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 w-60 text-sm"
               />
             </div>
             <button 
               onClick={() => router.push('/trades/new')}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-5 py-2 rounded-full transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white font-medium px-5 py-2 rounded-full transition-all flex items-center gap-2 text-sm"
             >
               <Plus className="w-4 h-4" />
               New Trade
@@ -245,8 +251,8 @@ export default function Dashboard() {
             {/* P&L Card */}
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-semibold">Trading Performance</h3>
-                <select className="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white text-sm focus:outline-none">
+                <h3 className="text-slate-200 font-medium">Trading Performance</h3>
+                <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-slate-300 text-sm focus:outline-none">
                   <option value="today">Today</option>
                   <option value="week">This Week</option>
                   <option value="month">This Month</option>
@@ -254,28 +260,28 @@ export default function Dashboard() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* P&L Chart Area */}
-                <div className="bg-gradient-to-br from-blue-600/30 to-blue-800/30 rounded-2xl p-5">
+                <div className="bg-white/[0.03] rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-300 text-sm">Total P&L</span>
-                    <span className={`flex items-center gap-1 text-sm ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className="text-slate-400 text-sm">Total P&L</span>
+                    <span className={`flex items-center gap-1 text-sm ${isProfit ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
                       {isProfit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                       {isProfit ? '+' : ''}{((totalProfit / 10000) * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div className={`text-4xl font-bold mb-2 ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`text-3xl font-bold mb-2 ${isProfit ? 'text-emerald-400/90' : 'text-rose-400/90'}`}>
                     {formatCurrency(totalProfit)}
                   </div>
-                  <div className="text-gray-400 text-sm">
+                  <div className="text-slate-500 text-sm">
                     Goal: $10,000 • Average: {formatCurrency(analytics?.expectancy || 0)}/trade
                   </div>
                   {/* Mini Chart */}
-                  <div className="h-24 mt-4 flex items-end gap-1">
+                  <div className="h-20 mt-4 flex items-end gap-1">
                     {[40, 65, 45, 80, 55, 70, 90, 60, 75, 85].map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 bg-gradient-to-t from-blue-500/50 to-blue-400/30 rounded-t"
+                        className="flex-1 bg-gradient-to-t from-cyan-500/30 to-cyan-400/10 rounded-t"
                         style={{ height: `${h}%` }}
                       />
                     ))}
@@ -283,27 +289,27 @@ export default function Dashboard() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="bg-gradient-to-br from-purple-600/30 to-purple-800/30 rounded-2xl p-5">
+                <div className="bg-white/[0.03] rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-300 text-sm">Win/Loss Stats</span>
-                    <span className="text-gray-400 text-sm">Breakdown</span>
+                    <span className="text-slate-400 text-sm">Win/Loss Stats</span>
+                    <span className="text-slate-500 text-sm">Breakdown</span>
                   </div>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Total Trades</span>
-                      <span className="text-white font-bold text-xl">{analytics?.total_trades || 0}</span>
+                      <span className="text-slate-400">Total Trades</span>
+                      <span className="text-white font-semibold text-lg">{analytics?.total_trades || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Avg Win</span>
-                      <span className="text-green-400 font-semibold">{formatCurrency(analytics?.average_win)}</span>
+                      <span className="text-slate-400">Avg Win</span>
+                      <span className="text-emerald-400/80 font-medium">{formatCurrency(analytics?.average_win)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Avg Loss</span>
-                      <span className="text-red-400 font-semibold">{formatCurrency(analytics?.average_loss)}</span>
+                      <span className="text-slate-400">Avg Loss</span>
+                      <span className="text-rose-400/80 font-medium">{formatCurrency(analytics?.average_loss)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Profit Factor</span>
-                      <span className="text-yellow-400 font-semibold">{analytics?.profit_factor?.toFixed(2) || '0.00'}</span>
+                      <span className="text-slate-400">Profit Factor</span>
+                      <span className="text-cyan-400/80 font-medium">{analytics?.profit_factor?.toFixed(2) || '0.00'}</span>
                     </div>
                   </div>
                 </div>
@@ -313,10 +319,10 @@ export default function Dashboard() {
             {/* Recent Trades */}
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-semibold">Recent Trades</h3>
+                <h3 className="text-slate-200 font-medium">Recent Trades</h3>
                 <button 
                   onClick={() => router.push('/trades')}
-                  className="text-yellow-400 hover:text-yellow-300 text-sm flex items-center gap-1"
+                  className="text-cyan-400/80 hover:text-cyan-300 text-sm flex items-center gap-1"
                 >
                   View All <ChevronRight className="w-4 h-4" />
                 </button>
@@ -324,52 +330,52 @@ export default function Dashboard() {
 
               {trades.length === 0 ? (
                 <div className="text-center py-12">
-                  <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <h4 className="text-white font-medium mb-2">No trades yet</h4>
-                  <p className="text-gray-400 mb-4">Start tracking your trading journey</p>
+                  <Activity className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <h4 className="text-slate-200 font-medium mb-2">No trades yet</h4>
+                  <p className="text-slate-500 mb-4">Start tracking your trading journey</p>
                   <button
                     onClick={() => router.push('/trades/new')}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-2 rounded-full transition-all"
+                    className="bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white font-medium px-6 py-2 rounded-full transition-all"
                   >
                     Add First Trade
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {trades.slice(0, 5).map((trade) => (
                     <div
                       key={trade.id}
                       onClick={() => router.push(`/trades/${trade.id}`)}
-                      className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl cursor-pointer transition-all group"
+                      className="flex items-center justify-between p-4 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl cursor-pointer transition-all group"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          trade.trade_type === 'buy' ? 'bg-green-500/20' : 'bg-red-500/20'
+                          trade.trade_type === 'buy' ? 'bg-emerald-500/15' : 'bg-rose-500/15'
                         }`}>
                           {trade.trade_type === 'buy' ? (
-                            <TrendingUp className="w-5 h-5 text-green-400" />
+                            <TrendingUp className="w-5 h-5 text-emerald-400/80" />
                           ) : (
-                            <TrendingDown className="w-5 h-5 text-red-400" />
+                            <TrendingDown className="w-5 h-5 text-rose-400/80" />
                           )}
                         </div>
                         <div>
-                          <div className="text-white font-medium">{trade.symbol}</div>
-                          <div className="text-gray-400 text-sm">
+                          <div className="text-slate-200 font-medium">{trade.symbol}</div>
+                          <div className="text-slate-500 text-sm">
                             {trade.trade_type.toUpperCase()} • {trade.volume} lots
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-semibold ${
-                          (trade.net_profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                        <div className={`font-medium ${
+                          (trade.net_profit || 0) >= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'
                         }`}>
                           {formatCurrency(trade.net_profit)}
                         </div>
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-slate-600 text-sm">
                           {new Date(trade.open_time).toLocaleDateString()}
                         </div>
                       </div>
-                      <Eye className="w-5 h-5 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Eye className="w-5 h-5 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   ))}
                 </div>
@@ -383,15 +389,15 @@ export default function Dashboard() {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-white font-semibold">Win Rate</h3>
-                  <p className="text-gray-400 text-sm">Keep improving!</p>
+                  <h3 className="text-slate-200 font-medium">Win Rate</h3>
+                  <p className="text-slate-500 text-sm">Keep improving!</p>
                 </div>
-                <Target className="w-5 h-5 text-yellow-400" />
+                <Target className="w-5 h-5 text-cyan-400/70" />
               </div>
               <div className="flex items-center justify-center py-4">
                 <WinRateRing percentage={winRate} />
               </div>
-              <div className="text-center text-gray-400 text-sm">
+              <div className="text-center text-slate-500 text-sm">
                 Goal is 55% • {winRate >= 55 ? '🎯 Target reached!' : `${(55 - winRate).toFixed(1)}% to go`}
               </div>
             </div>
@@ -401,48 +407,48 @@ export default function Dashboard() {
 
             {/* Quick Actions */}
             <div className="glass-card p-5">
-              <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
+              <h3 className="text-slate-200 font-medium mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => router.push('/trades/new')}
-                  className="flex flex-col items-center gap-2 p-4 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/30 rounded-xl transition-all group"
+                  className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 hover:bg-cyan-500/15 rounded-xl transition-all group"
                 >
-                  <Plus className="w-6 h-6 text-yellow-400" />
-                  <span className="text-white text-sm">New Trade</span>
+                  <Plus className="w-5 h-5 text-cyan-400/80" />
+                  <span className="text-slate-300 text-sm">New Trade</span>
                 </button>
                 <button
                   onClick={() => router.push('/journal/new')}
-                  className="flex flex-col items-center gap-2 p-4 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-xl transition-all group"
+                  className="flex flex-col items-center gap-2 p-4 bg-violet-500/10 hover:bg-violet-500/15 rounded-xl transition-all group"
                 >
-                  <Zap className="w-6 h-6 text-purple-400" />
-                  <span className="text-white text-sm">Journal</span>
+                  <Zap className="w-5 h-5 text-violet-400/80" />
+                  <span className="text-slate-300 text-sm">Journal</span>
                 </button>
                 <button
                   onClick={() => router.push('/analytics')}
-                  className="flex flex-col items-center gap-2 p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl transition-all group"
+                  className="flex flex-col items-center gap-2 p-4 bg-blue-500/10 hover:bg-blue-500/15 rounded-xl transition-all group"
                 >
-                  <BarChart3 className="w-6 h-6 text-blue-400" />
-                  <span className="text-white text-sm">Analytics</span>
+                  <BarChart3 className="w-5 h-5 text-blue-400/80" />
+                  <span className="text-slate-300 text-sm">Analytics</span>
                 </button>
                 <button
                   onClick={() => router.push('/calendar')}
-                  className="flex flex-col items-center gap-2 p-4 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-xl transition-all group"
+                  className="flex flex-col items-center gap-2 p-4 bg-emerald-500/10 hover:bg-emerald-500/15 rounded-xl transition-all group"
                 >
-                  <Calendar className="w-6 h-6 text-green-400" />
-                  <span className="text-white text-sm">Calendar</span>
+                  <Calendar className="w-5 h-5 text-emerald-400/80" />
+                  <span className="text-slate-300 text-sm">Calendar</span>
                 </button>
               </div>
             </div>
 
             {/* Performance Tip */}
-            <div className="glass-card p-5 border-l-4 border-yellow-400">
+            <div className="glass-card p-5 border-l-2 border-cyan-500/50">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-yellow-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-4 h-4 text-yellow-400" />
+                <div className="w-8 h-8 bg-cyan-500/15 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-4 h-4 text-cyan-400/80" />
                 </div>
                 <div>
-                  <h4 className="text-white font-medium mb-1">Trading Tip</h4>
-                  <p className="text-gray-400 text-sm">
+                  <h4 className="text-slate-200 font-medium mb-1">Trading Tip</h4>
+                  <p className="text-slate-500 text-sm">
                     {analytics?.profit_factor && analytics.profit_factor < 1.5
                       ? "Focus on your risk management. Consider reducing position sizes on losing streaks."
                       : winRate < 50
