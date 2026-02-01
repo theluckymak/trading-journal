@@ -141,7 +141,6 @@ export default function ChatBox({
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
