@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     FROM_EMAIL: str = ""  # Optional, defaults to SMTP_USER
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = ""
     
     @property
     def get_from_email(self) -> str:

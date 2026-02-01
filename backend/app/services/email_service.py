@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import logging
+import httpx
 
 from app.config import settings
 
@@ -21,6 +22,8 @@ class EmailService:
         self.smtp_user = settings.SMTP_USER
         self.smtp_password = settings.SMTP_PASSWORD
         self.from_email = settings.SMTP_USER
+        self.resend_api_key = settings.RESEND_API_KEY
+        self.resend_from_email = settings.RESEND_FROM_EMAIL
     
     def send_email(
         self,
@@ -41,6 +44,42 @@ class EmailService:
         Returns:
             True if email was sent successfully, False otherwise
         """
+        if self.resend_api_key:
+            if not self.resend_from_email:
+                logger.error("Resend configured but RESEND_FROM_EMAIL is missing")
+                return False
+            try:
+                payload = {
+                    "from": self.resend_from_email,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content,
+                }
+                if text_content:
+                    payload["text"] = text_content
+
+                response = httpx.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {self.resend_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                    timeout=10,
+                )
+                if 200 <= response.status_code < 300:
+                    logger.info(f"Email sent successfully to {to_email} via Resend")
+                    return True
+                logger.error(
+                    "Resend email failed: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
+                return False
+            except Exception as e:
+                logger.error(f"Resend email failed for {to_email}: {str(e)}")
+                return False
+
         if not all([self.smtp_host, self.smtp_user, self.smtp_password]):
             logger.warning("SMTP not configured, skipping email send")
             return False

@@ -12,6 +12,7 @@ from app.models.auth import RefreshToken
 from app.services.password_service import password_service
 from app.services.token_service import token_service
 from app.services.email_service import EmailService
+from app.config import settings
 from app.utils.validators import validate_password_strength, sanitize_input
 from app.utils.logging import get_logger, log_security_event
 
@@ -97,16 +98,21 @@ class AuthService:
         self.db.refresh(user)
         
         # Send verification email (non-blocking - don't fail registration if email fails)
+        sent = False
         try:
-            self.email_service.send_verification_email(email, verification_token)
-            logger.info(f"Verification email sent to: {email}")
+            sent = self.email_service.send_verification_email(email, verification_token)
+            if sent:
+                logger.info(f"Verification email sent to: {email}")
+            else:
+                logger.warning(f"Verification email not sent to: {email}")
         except Exception as e:
             logger.error(f"Failed to send verification email to {email}: {str(e)}")
             # Don't fail registration if email fails - user can resend later
         
-        # Log verification link for development/testing when SMTP is not configured
-        logger.warning(f"EMAIL VERIFICATION TOKEN for {email}: {verification_token}")
-        logger.warning(f"Verification URL: https://maktrades.app/auth/verify-email?token={verification_token}")
+        # Log verification link for development/testing when email isn't sent
+        if settings.DEBUG and not sent:
+            logger.warning(f"EMAIL VERIFICATION TOKEN for {email}: {verification_token}")
+            logger.warning(f"Verification URL: https://maktrades.app/auth/verify-email?token={verification_token}")
         
         logger.info(f"New user registered: {user.id}")
         return user
