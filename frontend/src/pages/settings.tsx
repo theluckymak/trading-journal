@@ -13,6 +13,8 @@ import {
   Key,
   Eye,
   EyeOff,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -22,6 +24,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const [profileData, setProfileData] = useState({
     full_name: '',
@@ -147,6 +150,52 @@ export default function SettingsPage() {
             {message.text}
           </div>
         )}
+
+        {/* User ID Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-cyan-100 dark:bg-cyan-900 rounded-lg">
+              <Shield className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">User ID</h2>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Your unique user identifier. Use this when contacting support.
+              </p>
+              <div className="flex items-center gap-3">
+                <code className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-lg font-mono text-gray-900 dark:text-white">
+                  UID: {user?.id || '---'}
+                </code>
+                <button
+                  onClick={() => {
+                    if (user?.id) {
+                      navigator.clipboard.writeText(String(user.id));
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition text-gray-600 dark:text-gray-300"
+                  title="Copy User ID"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-green-500">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span className="text-sm">Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Profile Section */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
