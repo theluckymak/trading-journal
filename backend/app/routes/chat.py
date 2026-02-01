@@ -85,36 +85,57 @@ def send_message(
     Regular users: message goes to their own conversation.
     Admins: must specify conversation_user_id to respond to a specific user.
     """
-    is_admin = current_user.role == UserRole.ADMIN
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # Determine which conversation this message belongs to
-    if is_admin:
-        if not message_data.conversation_user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Admins must specify conversation_user_id"
-            )
-        conversation_user_id = message_data.conversation_user_id
-    else:
-        # Regular users always message in their own conversation
-        conversation_user_id = current_user.id
-    
-    message = ChatService.create_message(
-        db=db,
-        user_id=current_user.id,
-        message=message_data.message,
-        conversation_user_id=conversation_user_id,
-        is_admin=is_admin
-    )
-    
-    return ChatMessageResponse(
-        id=message.id,
-        user_id=message.user_id,
-        user_name=message.user.full_name or message.user.email,
-        message=message.message,
-        is_admin=message.is_admin,
-        created_at=message.created_at
-    )
+    try:
+        logger.info(f"send_message called by user {current_user.id}, role={current_user.role}")
+        is_admin = current_user.role == UserRole.ADMIN
+        logger.info(f"is_admin={is_admin}, conversation_user_id={message_data.conversation_user_id}")
+        
+        # Determine which conversation this message belongs to
+        if is_admin:
+            if not message_data.conversation_user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Admins must specify conversation_user_id"
+                )
+            conversation_user_id = message_data.conversation_user_id
+        else:
+            # Regular users always message in their own conversation
+            conversation_user_id = current_user.id
+        
+        logger.info(f"Creating message for conversation_user_id={conversation_user_id}")
+        message = ChatService.create_message(
+            db=db,
+            user_id=current_user.id,
+            message=message_data.message,
+            conversation_user_id=conversation_user_id,
+            is_admin=is_admin
+        )
+        logger.info(f"Message created with id={message.id}")
+        
+        # Safely get user name
+        user_name = message.user.email  # Default to email
+        if message.user and message.user.full_name:
+            user_name = message.user.full_name
+        
+        return ChatMessageResponse(
+            id=message.id,
+            user_id=message.user_id,
+            user_name=user_name,
+            message=message.message,
+            is_admin=message.is_admin,
+            created_at=message.created_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in send_message: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error: {str(e)}"
+        )
 
 
 @router.get("/messages", response_model=List[ChatMessageResponse])
