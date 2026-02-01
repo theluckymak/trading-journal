@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 
@@ -13,7 +13,7 @@ class ChatMessage(Base):
     conversation_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     message = Column(Text, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Relationship to user
     user = relationship("User", back_populates="chat_messages", foreign_keys=[user_id])
