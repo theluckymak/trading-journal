@@ -23,7 +23,8 @@ class EmailService:
         self.smtp_password = settings.SMTP_PASSWORD
         self.from_email = settings.SMTP_USER
         self.resend_api_key = settings.RESEND_API_KEY
-        self.resend_from_email = settings.RESEND_FROM_EMAIL
+        # Use configured sender or fallback to onboarding@resend.dev
+        self.resend_from_email = settings.RESEND_FROM_EMAIL or "onboarding@resend.dev"
     
     def send_email(
         self,

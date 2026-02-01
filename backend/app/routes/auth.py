@@ -10,6 +10,7 @@ from app.database import get_db
 from app.schemas import UserCreate, UserLogin, UserResponse, TokenResponse, RefreshTokenRequest, UserUpdate
 from app.services.auth_service import AuthService
 from app.services.oauth_service import OAuthService
+from app.services.email_service import EmailService
 from app.middleware.auth import get_current_user, get_client_info
 from app.models.user import User
 
