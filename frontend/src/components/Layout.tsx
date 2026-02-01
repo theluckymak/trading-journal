@@ -9,7 +9,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <>
       {/* Mobile: Top bar layout */}
-      <div className="md:hidden flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="md:hidden flex flex-col h-screen bg-[#0a0f1a]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
           {children}
@@ -17,7 +17,7 @@ export default function Layout({ children }: LayoutProps) {
       </div>
       
       {/* Desktop: Sidebar layout */}
-      <div className="hidden md:flex h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="hidden md:flex h-screen bg-[#0a0f1a]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
           {children}
