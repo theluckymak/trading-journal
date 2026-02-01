@@ -67,7 +67,7 @@ export default function AuthCallback() {
         console.log('Sending token to backend:', provider);
 
         // Send token to backend for verification and user creation
-        const response = await fetch(`https://trading-journal-production-8248.up.railway.app/api/auth/oauth/${provider}/token`, {
+        const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/auth/oauth/${provider}/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ export default function AuthCallback() {
         localStorage.setItem('refreshToken', refresh_token);
         
         // Fetch actual user data from backend
-        const userResponse = await fetch('https://trading-journal-production-8248.up.railway.app/api/auth/me', {
+        const userResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${access_token}`,
           },

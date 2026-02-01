@@ -52,7 +52,7 @@ export default function AddJournalModal({ isOpen, onClose, onSuccess }: AddJourn
         return;
       }
 
-      let response = await fetch('https://trading-journal-production-8248.up.railway.app/api/journal/entries', {
+      let response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/journal/entries', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export default function AddJournalModal({ isOpen, onClose, onSuccess }: AddJourn
         
         if (refreshToken) {
           try {
-            const refreshResponse = await fetch('https://trading-journal-production-8248.up.railway.app/api/auth/refresh', {
+            const refreshResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/auth/refresh', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export default function AddJournalModal({ isOpen, onClose, onSuccess }: AddJourn
               const newAccessToken = refreshData.access_token;
               localStorage.setItem('accessToken', newAccessToken);
 
-              response = await fetch('https://trading-journal-production-8248.up.railway.app/api/journal/entries', {
+              response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/journal/entries', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

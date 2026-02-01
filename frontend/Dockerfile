@@ -15,7 +15,7 @@ RUN npm ci
 COPY . .
 
 # Accept build arguments with default Railway backend URL
-ARG NEXT_PUBLIC_API_URL=https://trading-journal-production-8248.up.railway.app
+ARG NEXT_PUBLIC_API_URL=https://dependable-solace-production-75f7.up.railway.app
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Force cache bust and verify env var

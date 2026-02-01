@@ -103,7 +103,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
         return;
       }
 
-      let response = await fetch('https://trading-journal-production-8248.up.railway.app/api/trades', {
+      let response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
         
         if (refreshToken) {
           try {
-            const refreshResponse = await fetch('https://trading-journal-production-8248.up.railway.app/api/auth/refresh', {
+            const refreshResponse = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/auth/refresh', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
               const newAccessToken = refreshData.access_token;
               localStorage.setItem('accessToken', newAccessToken);
 
-              response = await fetch('https://trading-journal-production-8248.up.railway.app/api/trades', {
+              response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
             screenshot_urls: [],
           };
 
-          const journalResponse = await fetch(`https://trading-journal-production-8248.up.railway.app/api/journal/entries/${createdTrade.id}`, {
+          const journalResponse = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${createdTrade.id}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
