@@ -86,7 +86,7 @@ export default function AdminPage() {
       return;
     }
 
-    if (user.role !== 'admin') {
+    if (user.role !== 'ADMIN') {
       router.push('/dashboard');
       return;
     }
@@ -138,7 +138,7 @@ export default function AdminPage() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== 'ADMIN') {
     return null;
   }
 

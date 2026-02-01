@@ -12,8 +12,8 @@ from app.database import Base
 
 class UserRole(str, enum.Enum):
     """User role enumeration."""
-    USER = "user"
-    ADMIN = "admin"
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 
 class User(Base):

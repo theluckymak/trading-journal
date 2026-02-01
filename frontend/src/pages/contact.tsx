@@ -88,7 +88,7 @@ export default function ContactPage() {
         <div className="h-[600px]">
           <ChatBox
             currentUserId={user.id}
-            isAdmin={user.role === 'admin'}
+            isAdmin={user.role === 'ADMIN'}
             onSendMessage={handleSendMessage}
             onDeleteMessage={handleDeleteMessage}
             messages={messages}

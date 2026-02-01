@@ -10,8 +10,8 @@ from enum import Enum
 # User Schemas
 class UserRole(str, Enum):
     """User role enum."""
-    USER = "user"
-    ADMIN = "admin"
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 
 class UserCreate(BaseModel):

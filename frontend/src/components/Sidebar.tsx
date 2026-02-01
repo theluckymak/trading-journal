@@ -143,7 +143,7 @@ export default function Sidebar() {
                 );
               })}
               
-              {user?.role === 'admin' && adminItems.map((item) => {
+              {user?.role === 'ADMIN' && adminItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
@@ -250,7 +250,7 @@ export default function Sidebar() {
             })}
             
             {/* Admin Items */}
-            {user?.role === 'admin' && (
+            {user?.role === 'ADMIN' && (
               <>
                 {!isCollapsed && (
                   <li className="pt-4 mt-4">
