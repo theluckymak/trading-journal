@@ -201,7 +201,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-cyan-500/60 border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="mt-4 text-slate-500">Loading your dashboard...</p>
@@ -217,7 +217,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8">
+      <div className="min-h-screen p-6 lg:p-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
