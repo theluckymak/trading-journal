@@ -144,7 +144,7 @@ export default function AdminPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
