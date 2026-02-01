@@ -144,8 +144,9 @@ export default function AdminPage() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header - fixed at top */}
+        <div className="mb-6 sticky top-0 bg-gray-50 dark:bg-gray-900 pt-4 pb-2 z-10">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <Shield className="h-8 w-8 text-primary-600" />
             Admin Panel
@@ -201,7 +202,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               User Conversations
             </h2>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            <div className="space-y-2 max-h-[450px] overflow-y-auto">
               {users.length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                   No conversations yet
@@ -245,7 +246,7 @@ export default function AdminPage() {
                 ? 'Your responses will be marked as "Support" and visible only to this user.'
                 : 'Select a user from the list to view and respond to their messages.'}
             </p>
-            <div className="h-[600px]">
+            <div className="h-[450px]">
               {selectedUserId ? (
                 <ChatBox
                   currentUserId={user.id}
