@@ -30,32 +30,11 @@ export default function ChatBox({
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevMessagesLengthRef = useRef<number>(0);
-  const isInitialLoadRef = useRef<boolean>(true);
 
   // Handle mounting for hydration safety
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Scroll to bottom only on initial load or when NEW messages are added
-  useEffect(() => {
-    const prevLength = prevMessagesLengthRef.current;
-    const currentLength = messages.length;
-    
-    // Scroll only if:
-    // 1. Initial load (first time messages are loaded)
-    // 2. New messages were added (not just a refresh)
-    if (isInitialLoadRef.current && currentLength > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      isInitialLoadRef.current = false;
-    } else if (currentLength > prevLength && prevLength > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    prevMessagesLengthRef.current = currentLength;
-  }, [messages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
