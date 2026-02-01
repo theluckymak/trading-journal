@@ -72,8 +72,6 @@ def send_message(
     user_role_str = str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role)
     is_admin = user_role_str.upper() == "ADMIN"
     
-    print(f"[CHAT] User {current_user.id} role: {current_user.role} (str: {user_role_str}), is_admin: {is_admin}")
-    
     # Determine which conversation this message belongs to
     if is_admin:
         if not message_data.conversation_user_id:
