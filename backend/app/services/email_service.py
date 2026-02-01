@@ -45,6 +45,8 @@ class EmailService:
             True if email was sent successfully, False otherwise
         """
         if self.resend_api_key:
+            logger.info(f"Attempting to send email via Resend to {to_email}")
+            logger.info(f"From: {self.resend_from_email}")
             if not self.resend_from_email:
                 logger.error("Resend configured but RESEND_FROM_EMAIL is missing")
                 return False
@@ -58,6 +60,7 @@ class EmailService:
                 if text_content:
                     payload["text"] = text_content
 
+                logger.info(f"Sending Resend request with payload to: {to_email}")
                 response = httpx.post(
                     "https://api.resend.com/emails",
                     headers={
@@ -65,8 +68,10 @@ class EmailService:
                         "Content-Type": "application/json",
                     },
                     json=payload,
-                    timeout=10,
+                    timeout=5.0,  # Reduced timeout
                 )
+                logger.info(f"Resend response status: {response.status_code}")
+                logger.info(f"Resend response body: {response.text}")
                 if 200 <= response.status_code < 300:
                     logger.info(f"Email sent successfully to {to_email} via Resend")
                     return True
@@ -75,6 +80,9 @@ class EmailService:
                     response.status_code,
                     response.text,
                 )
+                return False
+            except httpx.TimeoutException as e:
+                logger.error(f"Resend timeout for {to_email}: {str(e)}")
                 return False
             except Exception as e:
                 logger.error(f"Resend email failed for {to_email}: {str(e)}")

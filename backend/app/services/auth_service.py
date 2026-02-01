@@ -37,9 +37,9 @@ class AuthService:
         email: str,
         password: str,
         full_name: Optional[str] = None
-    ) -> User:
+    ) -> Tuple[User, Optional[str]]:
         """
-        Register a new user and send verification email.
+        Register a new user and return verification token for background email.
         
         Args:
             email: User email
@@ -47,7 +47,7 @@ class AuthService:
             full_name: Optional full name
             
         Returns:
-            Created user
+            Tuple of (Created user, verification_token)
             
         Raises:
             HTTPException: If email already exists or password is weak
@@ -97,25 +97,13 @@ class AuthService:
         self.db.commit()
         self.db.refresh(user)
         
-        # Send verification email (non-blocking - don't fail registration if email fails)
-        sent = False
-        try:
-            sent = self.email_service.send_verification_email(email, verification_token)
-            if sent:
-                logger.info(f"Verification email sent to: {email}")
-            else:
-                logger.warning(f"Verification email not sent to: {email}")
-        except Exception as e:
-            logger.error(f"Failed to send verification email to {email}: {str(e)}")
-            # Don't fail registration if email fails - user can resend later
-        
-        # Log verification link for development/testing when email isn't sent
-        if settings.DEBUG and not sent:
+        # Log verification link for development/testing
+        if settings.DEBUG:
             logger.warning(f"EMAIL VERIFICATION TOKEN for {email}: {verification_token}")
             logger.warning(f"Verification URL: https://maktrades.app/auth/verify-email?token={verification_token}")
         
         logger.info(f"New user registered: {user.id}")
-        return user
+        return user, verification_token
     
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
         """

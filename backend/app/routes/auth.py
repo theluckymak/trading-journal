@@ -1,7 +1,7 @@
 """
 Authentication routes.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -23,15 +23,27 @@ limiter = Limiter(key_func=get_remote_address)
 async def register(
     request: Request,
     user_data: UserCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Register a new user."""
     auth_service = AuthService(db)
-    user = auth_service.register_user(
+    user, verification_token = auth_service.register_user(
         email=user_data.email,
         password=user_data.password,
         full_name=user_data.full_name
     )
+    
+    # Send email in background (non-blocking)
+    if verification_token:
+        from app.services.email_service import EmailService
+        email_service = EmailService()
+        background_tasks.add_task(
+            email_service.send_verification_email,
+            user_data.email,
+            verification_token
+        )
+    
     return user
 
 
