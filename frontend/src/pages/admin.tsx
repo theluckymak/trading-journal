@@ -144,7 +144,7 @@ export default function AdminPage() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 pt-16 pb-6">
+      <div className="max-w-7xl mx-auto px-4 pt-24 pb-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
