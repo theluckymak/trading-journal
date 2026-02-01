@@ -128,13 +128,12 @@ class AuthService:
             return None
         
         # Check if email is verified (skip for OAuth users)
-        # Temporarily disabled - uncomment when email verification is working
-        # if not user.oauth_provider and not user.is_verified:
-        #     log_security_event("login_failed", {"email": email, "reason": "email_not_verified"})
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail="Please verify your email before logging in"
-        #     )
+        if not user.oauth_provider and not user.is_verified:
+            log_security_event("login_failed", {"email": email, "reason": "email_not_verified"})
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Please verify your email before logging in. Check your inbox and spam folder."
+            )
         
         if not password_service.verify_password(password, user.hashed_password):
             log_security_event("login_failed", {"email": email, "reason": "invalid_password"})

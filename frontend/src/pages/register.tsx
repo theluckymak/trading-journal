@@ -39,8 +39,9 @@ export default function RegisterPage() {
     try {
       console.log('Attempting registration...', { email: formData.email });
       await register(formData.email, formData.password, formData.fullName || undefined);
-      console.log('Registration successful, redirecting...');
-      router.push('/dashboard');
+      console.log('Registration successful, redirecting to check email...');
+      // Redirect to check-email page instead of dashboard
+      router.push(`/auth/check-email?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
       console.error('Registration error:', err);
       console.error('Error response:', err.response);

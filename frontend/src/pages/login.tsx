@@ -39,6 +39,12 @@ export default function LoginPage() {
       console.error('Error response:', err.response);
       console.error('Error message:', err.message);
       
+      // Check if user needs to verify email (403 error)
+      if (err.response?.status === 403) {
+        router.push(`/auth/check-email?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
+      
       // Handle validation errors (array) or simple error messages (string)
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
