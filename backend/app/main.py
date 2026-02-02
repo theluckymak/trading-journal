@@ -13,6 +13,7 @@ from app.config import settings
 from app.database import init_db
 from app.routes import auth_router, trades_router, journal_router
 from app.routes.chat import router as chat_router
+from app.routes.mt5 import router as mt5_router
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.utils.logging import setup_logging, get_logger
@@ -97,6 +98,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(trades_router, prefix="/api")
 app.include_router(journal_router, prefix="/api")
 app.include_router(chat_router)
+app.include_router(mt5_router)
 
 
 @app.on_event("startup")

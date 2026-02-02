@@ -15,6 +15,12 @@ import {
   EyeOff,
   Copy,
   Check,
+  RefreshCw,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Loader2,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -23,8 +29,33 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showMt5Password, setShowMt5Password] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  // MT5 Settings State
+  const [mt5Loading, setMt5Loading] = useState(true);
+  const [mt5Saving, setMt5Saving] = useState(false);
+  const [mt5Config, setMt5Config] = useState<{
+    mt5_login: string;
+    mt5_password: string;
+    mt5_server: string;
+    is_active: boolean;
+    sync_interval_minutes: number;
+  }>({
+    mt5_login: '',
+    mt5_password: '',
+    mt5_server: '',
+    is_active: true,
+    sync_interval_minutes: 5,
+  });
+  const [mt5Status, setMt5Status] = useState<{
+    has_config: boolean;
+    is_active: boolean;
+    last_sync_at: string | null;
+    last_sync_status: string | null;
+    last_sync_message: string | null;
+  } | null>(null);
   
   const [profileData, setProfileData] = useState({
     full_name: '',
@@ -51,6 +82,130 @@ export default function SettingsPage() {
       email: user.email || '',
     });
   }, [user]);
+
+  // Fetch MT5 status on mount
+  useEffect(() => {
+    if (user) {
+      fetchMt5Status();
+    }
+  }, [user]);
+
+  const fetchMt5Status = async () => {
+    try {
+      setMt5Loading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/status`, {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMt5Status(data);
+        if (data.has_config) {
+          // Fetch account config to pre-fill the form
+          const configResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account`, {
+            headers: {
+              'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+            },
+          });
+          if (configResponse.ok) {
+            const configData = await configResponse.json();
+            setMt5Config({
+              mt5_login: configData.mt5_login || '',
+              mt5_password: '', // Don't fetch password for security
+              mt5_server: configData.mt5_server || '',
+              is_active: configData.is_active ?? true,
+              sync_interval_minutes: configData.sync_interval_minutes || 5,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch MT5 status:', error);
+    } finally {
+      setMt5Loading(false);
+    }
+  };
+
+  const handleMt5Save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMt5Saving(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(mt5Config),
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'MT5 credentials saved successfully!' });
+        // Clear password after save
+        setMt5Config({ ...mt5Config, mt5_password: '' });
+        // Refresh status
+        await fetchMt5Status();
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.detail || 'Failed to save MT5 credentials' });
+      }
+    } catch (error) {
+      console.error('Failed to save MT5 credentials:', error);
+      setMessage({ type: 'error', text: 'Failed to save MT5 credentials' });
+    } finally {
+      setMt5Saving(false);
+    }
+  };
+
+  const handleMt5Toggle = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account/toggle`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMt5Config({ ...mt5Config, is_active: data.is_active });
+        setMessage({ type: 'success', text: data.is_active ? 'MT5 sync enabled' : 'MT5 sync disabled' });
+        await fetchMt5Status();
+      }
+    } catch (error) {
+      console.error('Failed to toggle MT5 sync:', error);
+    }
+  };
+
+  const handleMt5Delete = async () => {
+    if (!confirm('Are you sure you want to remove your MT5 credentials?')) return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        setMt5Config({
+          mt5_login: '',
+          mt5_password: '',
+          mt5_server: '',
+          is_active: true,
+          sync_interval_minutes: 5,
+        });
+        setMt5Status(null);
+        setMessage({ type: 'success', text: 'MT5 credentials removed' });
+      }
+    } catch (error) {
+      console.error('Failed to remove MT5 credentials:', error);
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,6 +350,172 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* MT5 Auto-Sync Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">MT5 Auto-Sync</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Connect your MT5 account to automatically sync trades
+              </p>
+            </div>
+            {mt5Status?.has_config && (
+              <button
+                onClick={handleMt5Toggle}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mt5Status.is_active
+                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {mt5Status.is_active ? 'Sync Active' : 'Sync Paused'}
+              </button>
+            )}
+          </div>
+
+          {/* Sync Status */}
+          {mt5Status?.has_config && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center gap-3 mb-2">
+                {mt5Status.last_sync_status === 'success' ? (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                ) : mt5Status.last_sync_status === 'error' ? (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                )}
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {mt5Status.last_sync_status === 'success'
+                    ? 'Last sync successful'
+                    : mt5Status.last_sync_status === 'error'
+                    ? 'Last sync failed'
+                    : 'Never synced'}
+                </span>
+              </div>
+              {mt5Status.last_sync_at && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Last sync: {new Date(mt5Status.last_sync_at).toLocaleString()}
+                </p>
+              )}
+              {mt5Status.last_sync_message && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {mt5Status.last_sync_message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {mt5Loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          ) : (
+            <form onSubmit={handleMt5Save} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    MT5 Login (Account Number)
+                  </label>
+                  <input
+                    type="text"
+                    value={mt5Config.mt5_login}
+                    onChange={(e) => setMt5Config({ ...mt5Config, mt5_login: e.target.value })}
+                    className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., 12345678"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    MT5 Server
+                  </label>
+                  <input
+                    type="text"
+                    value={mt5Config.mt5_server}
+                    onChange={(e) => setMt5Config({ ...mt5Config, mt5_server: e.target.value })}
+                    className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., ICMarkets-Demo"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  MT5 Password {mt5Status?.has_config && '(leave blank to keep current)'}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showMt5Password ? 'text' : 'password'}
+                    value={mt5Config.mt5_password}
+                    onChange={(e) => setMt5Config({ ...mt5Config, mt5_password: e.target.value })}
+                    className="w-full px-4 py-2 pr-10 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    placeholder={mt5Status?.has_config ? '••••••••' : 'Enter MT5 password'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMt5Password(!showMt5Password)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showMt5Password ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sync Interval (minutes)
+                </label>
+                <select
+                  value={mt5Config.sync_interval_minutes}
+                  onChange={(e) =>
+                    setMt5Config({ ...mt5Config, sync_interval_minutes: parseInt(e.target.value) })
+                  }
+                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                >
+                  <option value={1}>Every 1 minute</option>
+                  <option value={5}>Every 5 minutes</option>
+                  <option value={15}>Every 15 minutes</option>
+                  <option value={30}>Every 30 minutes</option>
+                  <option value={60}>Every hour</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={mt5Saving || !mt5Config.mt5_login || !mt5Config.mt5_server}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {mt5Saving ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Save className="h-5 w-5" />
+                  )}
+                  {mt5Saving ? 'Saving...' : mt5Status?.has_config ? 'Update Credentials' : 'Save Credentials'}
+                </button>
+
+                {mt5Status?.has_config && (
+                  <button
+                    type="button"
+                    onClick={handleMt5Delete}
+                    className="px-6 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                  >
+                    Remove Credentials
+                  </button>
+                )}
+              </div>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                Your credentials are encrypted. We only use them to sync your trades.
+              </p>
+            </form>
+          )}
         </div>
 
         {/* Profile Section */}

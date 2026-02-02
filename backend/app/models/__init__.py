@@ -7,6 +7,7 @@ from app.models.auth import RefreshToken, PasswordResetToken
 from app.models.trade import Trade, TradeType, TradeSource
 from app.models.journal import JournalEntry, TradeTag, trade_tag_associations
 from app.models.chat import ChatMessage
+from app.models.mt5_account import MT5Account
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "TradeTag",
     "trade_tag_associations",
     "ChatMessage",
+    "MT5Account",
 ]

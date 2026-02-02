@@ -1,0 +1,8 @@
+# Requirements for MT5 Sync Service on VPS
+# Install with: pip install -r requirements.txt
+
+MetaTrader5>=5.0.45
+pg8000>=1.30.0
+SQLAlchemy>=2.0.0
+pycryptodome>=3.19.0
+requests>=2.31.0
