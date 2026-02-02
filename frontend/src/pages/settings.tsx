@@ -95,7 +95,7 @@ export default function SettingsPage() {
       setMt5Loading(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/status`, {
         headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
       if (response.ok) {
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           // Fetch account config to pre-fill the form
           const configResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account`, {
             headers: {
-              'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
             },
           });
           if (configResponse.ok) {
@@ -137,7 +137,7 @@ export default function SettingsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify(mt5Config),
       });
@@ -165,7 +165,7 @@ export default function SettingsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account/toggle`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
 
@@ -187,7 +187,7 @@ export default function SettingsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mt5/account`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
 
