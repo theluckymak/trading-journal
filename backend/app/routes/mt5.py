@@ -1,8 +1,8 @@
 """
 MT5 Account API routes for managing broker credentials.
 """
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -12,9 +12,13 @@ from app.models.user import User
 from app.models.mt5_account import MT5Account
 from app.middleware.auth import get_current_user
 from app.services.encryption_service import EncryptionService
+from app.config import settings
 
 
 router = APIRouter(prefix="/api/mt5", tags=["mt5"])
+
+# VPS Secret for internal sync endpoint
+VPS_SECRET = settings.ENCRYPTION_KEY  # Use same key for simplicity
 
 
 # Schemas
@@ -200,3 +204,111 @@ def get_mt5_status(
         last_sync_message=account.last_sync_message,
         total_trades_synced=mt5_trades_count
     )
+
+# ============================================
+# VPS Internal Sync Endpoints
+# ============================================
+
+class VPSSyncAccount(BaseModel):
+    """Account data for VPS sync."""
+    id: int
+    user_id: int
+    mt5_login: str
+    mt5_password: str  # Decrypted!
+    mt5_server: str
+    sync_interval_minutes: int
+    last_sync_at: Optional[datetime] = None
+    last_trade_time: Optional[datetime] = None
+
+
+class VPSSyncStatusUpdate(BaseModel):
+    """Status update from VPS."""
+    account_id: int
+    status: str  # 'success' or 'error'
+    message: str
+    last_trade_time: Optional[datetime] = None
+
+
+@router.get("/vps/accounts", response_model=List[VPSSyncAccount])
+def get_accounts_for_vps_sync(
+    x_vps_secret: str = Header(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Internal endpoint for VPS to get accounts that need syncing.
+    Secured with VPS_SECRET header.
+    Returns decrypted passwords.
+    """
+    if x_vps_secret != VPS_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid VPS secret"
+        )
+    
+    from sqlalchemy import text
+    
+    # Get accounts that need syncing
+    accounts = db.query(MT5Account).filter(
+        MT5Account.is_active == True
+    ).all()
+    
+    encryption_service = EncryptionService()
+    result = []
+    
+    for account in accounts:
+        # Check if it's time to sync
+        should_sync = False
+        if account.last_sync_at is None:
+            should_sync = True
+        else:
+            from datetime import timezone, timedelta
+            now = datetime.now(timezone.utc)
+            next_sync = account.last_sync_at + timedelta(minutes=account.sync_interval_minutes)
+            should_sync = now >= next_sync
+        
+        if should_sync:
+            # Decrypt password
+            password = encryption_service.decrypt(account.mt5_password_encrypted)
+            if password:
+                result.append(VPSSyncAccount(
+                    id=account.id,
+                    user_id=account.user_id,
+                    mt5_login=account.mt5_login,
+                    mt5_password=password,
+                    mt5_server=account.mt5_server,
+                    sync_interval_minutes=account.sync_interval_minutes,
+                    last_sync_at=account.last_sync_at,
+                    last_trade_time=account.last_trade_time
+                ))
+    
+    return result
+
+
+@router.post("/vps/status")
+def update_sync_status_from_vps(
+    update: VPSSyncStatusUpdate,
+    x_vps_secret: str = Header(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Internal endpoint for VPS to update sync status.
+    """
+    if x_vps_secret != VPS_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid VPS secret"
+        )
+    
+    account = db.query(MT5Account).filter(MT5Account.id == update.account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    from datetime import timezone
+    account.last_sync_at = datetime.now(timezone.utc)
+    account.last_sync_status = update.status
+    account.last_sync_message = update.message
+    if update.last_trade_time:
+        account.last_trade_time = update.last_trade_time
+    
+    db.commit()
+    return {"status": "updated"}

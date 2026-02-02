@@ -42,6 +42,7 @@ import base64
 # ============================================
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+pg8000://postgres:smxkwHcGTqHdwdcvePMPYLwxuQCRNrrU@yamabiko.proxy.rlwy.net:34388/railway')
 ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'dev-encryption-key-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')  # Must match backend
+API_URL = os.environ.get('API_URL', 'https://trading-journal-backend-production.up.railway.app')
 
 # How often to check for accounts to sync (in seconds)
 SYNC_CHECK_INTERVAL = 60
@@ -116,80 +117,70 @@ class EncryptionService:
 
 
 # ============================================
-# DATABASE CONNECTION
+# DATABASE CONNECTION (for inserting trades)
 # ============================================
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
 
+# ============================================
+# API FUNCTIONS (for getting accounts with decrypted passwords)
+# ============================================
+import requests
+
 def get_accounts_to_sync() -> List[Dict]:
-    """Get all active MT5 accounts that need syncing."""
-    with Session() as session:
-        result = session.execute(text("""
-            SELECT 
-                ma.id,
-                ma.user_id,
-                ma.mt5_login,
-                ma.mt5_password_encrypted,
-                ma.mt5_server,
-                ma.sync_interval_minutes,
-                ma.last_sync_at,
-                ma.last_trade_time
-            FROM mt5_accounts ma
-            WHERE ma.is_active = true
-            AND (
-                ma.last_sync_at IS NULL 
-                OR ma.last_sync_at < NOW() - (ma.sync_interval_minutes || ' minutes')::interval
-            )
-            ORDER BY ma.last_sync_at ASC NULLS FIRST
-        """))
-        
-        accounts = []
-        for row in result:
-            accounts.append({
-                'id': row[0],
-                'user_id': row[1],
-                'mt5_login': row[2],
-                'mt5_password_encrypted': row[3],
-                'mt5_server': row[4],
-                'sync_interval_minutes': row[5],
-                'last_sync_at': row[6],
-                'last_trade_time': row[7]
-            })
-        
-        return accounts
+    """Get all active MT5 accounts that need syncing via API."""
+    try:
+        response = requests.get(
+            f"{API_URL}/api/mt5/vps/accounts",
+            headers={"X-VPS-Secret": ENCRYPTION_KEY},
+            timeout=30
+        )
+        if response.status_code == 200:
+            accounts = response.json()
+            # Convert to expected format
+            result = []
+            for acc in accounts:
+                result.append({
+                    'id': acc['id'],
+                    'user_id': acc['user_id'],
+                    'mt5_login': acc['mt5_login'],
+                    'mt5_password': acc['mt5_password'],  # Already decrypted!
+                    'mt5_server': acc['mt5_server'],
+                    'sync_interval_minutes': acc['sync_interval_minutes'],
+                    'last_sync_at': acc.get('last_sync_at'),
+                    'last_trade_time': acc.get('last_trade_time')
+                })
+            return result
+        else:
+            logger.error(f"API error: {response.status_code} - {response.text}")
+            return []
+    except Exception as e:
+        logger.error(f"Failed to get accounts from API: {e}")
+        return []
 
 
 def update_sync_status(account_id: int, status: str, message: str, last_trade_time: datetime = None):
-    """Update the sync status for an account."""
-    with Session() as session:
+    """Update the sync status for an account via API."""
+    try:
+        payload = {
+            "account_id": account_id,
+            "status": status,
+            "message": message
+        }
         if last_trade_time:
-            session.execute(text("""
-                UPDATE mt5_accounts 
-                SET last_sync_at = NOW(),
-                    last_sync_status = :status,
-                    last_sync_message = :message,
-                    last_trade_time = :last_trade_time
-                WHERE id = :id
-            """), {
-                'id': account_id,
-                'status': status,
-                'message': message,
-                'last_trade_time': last_trade_time
-            })
-        else:
-            session.execute(text("""
-                UPDATE mt5_accounts 
-                SET last_sync_at = NOW(),
-                    last_sync_status = :status,
-                    last_sync_message = :message
-                WHERE id = :id
-            """), {
-                'id': account_id,
-                'status': status,
-                'message': message
-            })
-        session.commit()
+            payload["last_trade_time"] = last_trade_time.isoformat()
+        
+        response = requests.post(
+            f"{API_URL}/api/mt5/vps/status",
+            headers={"X-VPS-Secret": ENCRYPTION_KEY, "Content-Type": "application/json"},
+            json=payload,
+            timeout=30
+        )
+        if response.status_code != 200:
+            logger.error(f"Failed to update status: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to update sync status via API: {e}")
 
 
 def insert_trade(user_id: int, trade_data: Dict) -> bool:
@@ -243,11 +234,9 @@ def sync_account(account: Dict) -> Tuple[bool, str, int]:
     Sync trades for a single MT5 account.
     Returns: (success: bool, message: str, trades_synced: int)
     """
-    encryption = EncryptionService()
-    
     try:
-        # Decrypt password
-        password = encryption.decrypt(account['mt5_password_encrypted'])
+        # Password is already decrypted from API
+        password = account['mt5_password']
         login = int(account['mt5_login'])
         server = account['mt5_server']
         
