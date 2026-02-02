@@ -42,7 +42,7 @@ import base64
 # ============================================
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+pg8000://postgres:smxkwHcGTqHdwdcvePMPYLwxuQCRNrrU@yamabiko.proxy.rlwy.net:34388/railway')
 ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'dev-encryption-key-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')  # Must match backend
-API_URL = os.environ.get('API_URL', 'https://trading-journal-backend-production.up.railway.app')
+API_URL = os.environ.get('API_URL', 'https://dependable-solace-production-75f7.up.railway.app')
 
 # How often to check for accounts to sync (in seconds)
 SYNC_CHECK_INTERVAL = 60
