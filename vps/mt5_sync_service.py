@@ -79,37 +79,37 @@ class EncryptionService:
         
         # Same logic as backend - ensure key is 32 bytes then base64 encode
         if len(key_bytes) < 32:
-            key_bytes = base64.urlsafe_b64encode(key_bytes.ljust(32, b'0'))
+            padded_key = key_bytes.ljust(32, b'0')
         elif len(key_bytes) > 32:
-            key_bytes = base64.urlsafe_b64encode(key_bytes[:32])
+            padded_key = key_bytes[:32]
         else:
-            key_bytes = base64.urlsafe_b64encode(key_bytes)
+            padded_key = key_bytes
         
-        self.key = key_bytes
+        # This is the raw 32-byte key (first 16 = HMAC, last 16 = AES)
+        self.signing_key = padded_key[:16]
+        self.encryption_key = padded_key[16:32]
     
     def decrypt(self, encrypted_data: str) -> str:
         """Decrypt Fernet-encrypted data."""
-        # Fernet format: version (1) + timestamp (8) + IV (16) + ciphertext + tag (16)
-        data = base64.urlsafe_b64decode(encrypted_data.encode())
-        
         if not USE_PYCRYPTODOME:
             raise Exception("pycryptodome required for decryption. Run: pip install pycryptodome")
         
-        # Extract Fernet key (it's base64 encoded, first 16 bytes for signing, last 16 for encryption)
-        fernet_key = base64.urlsafe_b64decode(self.key)
-        encryption_key = fernet_key[16:32] if len(fernet_key) >= 32 else fernet_key[:16].ljust(16, b'\0')
+        # Decode the Fernet token
+        data = base64.urlsafe_b64decode(encrypted_data.encode())
         
-        # Parse Fernet token
+        # Parse Fernet token format:
+        # version (1 byte) + timestamp (8 bytes) + IV (16 bytes) + ciphertext + HMAC (32 bytes)
         version = data[0]
         timestamp = data[1:9]
         iv = data[9:25]
-        ciphertext_and_tag = data[25:]
+        ciphertext_with_hmac = data[25:]
         
-        # Last 16 bytes are HMAC, rest is ciphertext
-        ciphertext = ciphertext_and_tag[:-16]
+        # Last 32 bytes are HMAC, rest is ciphertext
+        ciphertext = ciphertext_with_hmac[:-32]
+        hmac_tag = ciphertext_with_hmac[-32:]
         
-        # Decrypt with AES-CBC
-        cipher = AES.new(encryption_key, AES.MODE_CBC, iv)
+        # Decrypt with AES-128-CBC
+        cipher = AES.new(self.encryption_key, AES.MODE_CBC, iv)
         decrypted = unpad(cipher.decrypt(ciphertext), AES.block_size)
         
         return decrypted.decode()
