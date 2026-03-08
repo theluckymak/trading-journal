@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
     
+    # Frontend URL (used for email verification links, password reset, etc.)
+    FRONTEND_URL: str = "https://maktrades.app"
+    
     # OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""

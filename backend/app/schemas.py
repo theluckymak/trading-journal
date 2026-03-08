@@ -117,7 +117,7 @@ class TradeCreate(BaseModel):
     stop_loss: Optional[float] = Field(None, gt=0)
     take_profit: Optional[float] = Field(None, gt=0)
     profit: Optional[float] = Field(None, ge=-1000000, le=1000000)
-    commission: float = Field(0.0, ge=-10000, le=0)
+    commission: float = Field(0.0, ge=0, le=10000)
     swap: float = Field(0.0, ge=-10000, le=10000)
     is_closed: Optional[bool] = False
 
@@ -173,7 +173,7 @@ class JournalEntryCreate(BaseModel):
     emotional_state: Optional[str] = Field(None, max_length=500)
     mistakes: Optional[str] = Field(None, max_length=5000)
     lessons_learned: Optional[str] = Field(None, max_length=5000)
-    screenshot_urls: Optional[List[str]] = Field(None, max_items=10)
+    screenshot_urls: Optional[List[str]] = Field(None, max_length=10)
 
 
 class JournalEntryResponse(BaseModel):

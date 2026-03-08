@@ -41,7 +41,7 @@ import base64
 # CONFIGURATION - SET THESE ON YOUR VPS
 # ============================================
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+pg8000://postgres:smxkwHcGTqHdwdcvePMPYLwxuQCRNrrU@yamabiko.proxy.rlwy.net:34388/railway')
-ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'dev-encryption-key-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')  # Must match backend
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', '80478333f67f9c257fd5b123caa663179da34707b8670d9baec624fdcdb38ed5')  # Must match backend
 API_URL = os.environ.get('API_URL', 'https://dependable-solace-production-75f7.up.railway.app')
 
 # How often to check for accounts to sync (in seconds)
@@ -188,11 +188,61 @@ def insert_trade(user_id: int, trade_data: Dict) -> bool:
     with Session() as session:
         # Check if trade already exists by MT5 ticket
         result = session.execute(text("""
-            SELECT id FROM trades WHERE user_id = :user_id AND mt5_ticket = :ticket
+            SELECT id, is_closed FROM trades WHERE user_id = :user_id AND mt5_ticket = :ticket
         """), {'user_id': user_id, 'ticket': str(trade_data['ticket'])})
         
-        if result.fetchone():
-            return False  # Already exists
+        existing = result.fetchone()
+        if existing:
+            trade_id, was_closed = existing
+            # If trade exists and is now closed but wasn't before, UPDATE it
+            if trade_data.get('is_closed') and not was_closed:
+                session.execute(text("""
+                    UPDATE trades SET
+                        close_price = :close_price,
+                        close_time = :close_time,
+                        profit = :profit,
+                        commission = :commission,
+                        swap = :swap,
+                        net_profit = :net_profit,
+                        is_closed = :is_closed,
+                        updated_at = NOW()
+                    WHERE id = :trade_id
+                """), {
+                    'trade_id': trade_id,
+                    'close_price': trade_data.get('close_price'),
+                    'close_time': trade_data.get('close_time'),
+                    'profit': trade_data.get('profit', 0),
+                    'commission': trade_data.get('commission', 0),
+                    'swap': trade_data.get('swap', 0),
+                    'net_profit': trade_data.get('net_profit', 0),
+                    'is_closed': True
+                })
+                session.commit()
+                logger.info(f"Updated closed trade: {trade_data['ticket']}")
+                return True
+            # If still open, update current profit/price
+            elif not trade_data.get('is_closed') and not was_closed:
+                session.execute(text("""
+                    UPDATE trades SET
+                        close_price = :close_price,
+                        profit = :profit,
+                        swap = :swap,
+                        net_profit = :net_profit,
+                        stop_loss = :stop_loss,
+                        take_profit = :take_profit,
+                        updated_at = NOW()
+                    WHERE id = :trade_id
+                """), {
+                    'trade_id': trade_id,
+                    'close_price': trade_data.get('close_price'),
+                    'profit': trade_data.get('profit', 0),
+                    'swap': trade_data.get('swap', 0),
+                    'net_profit': trade_data.get('net_profit', 0),
+                    'stop_loss': trade_data.get('stop_loss'),
+                    'take_profit': trade_data.get('take_profit')
+                })
+                session.commit()
+            return False  # Not a new trade
         
         # Insert new trade
         session.execute(text("""
@@ -202,7 +252,7 @@ def insert_trade(user_id: int, trade_data: Dict) -> bool:
                 open_time, close_time, profit, commission, swap, net_profit,
                 is_closed, created_at
             ) VALUES (
-                :user_id, :mt5_ticket, 'mt5_auto', :symbol, :trade_type, :volume,
+                :user_id, :mt5_ticket, 'MT5_AUTO', :symbol, :trade_type, :volume,
                 :open_price, :close_price, :stop_loss, :take_profit,
                 :open_time, :close_time, :profit, :commission, :swap, :net_profit,
                 :is_closed, NOW()
@@ -233,20 +283,22 @@ def sync_account(account: Dict) -> Tuple[bool, str, int]:
     """
     Sync trades for a single MT5 account.
     Returns: (success: bool, message: str, trades_synced: int)
+    
+    SIMPLE APPROACH:
+    1. Get ALL history deals (not filtered by date to avoid missing trades)
+    2. For closed trades: Use exit deal which has the final profit
+    3. For open trades: Use positions_get()
     """
     try:
-        # Password is already decrypted from API
         password = account['mt5_password']
         login = int(account['mt5_login'])
         server = account['mt5_server']
         
         logger.info(f"Connecting to MT5 for user {account['user_id']} (login: {login})")
         
-        # Initialize MT5
         if not mt5.initialize():
             return False, f"MT5 initialization failed: {mt5.last_error()}", 0
         
-        # Login to account
         if not mt5.login(login, password=password, server=server):
             error = mt5.last_error()
             mt5.shutdown()
@@ -254,85 +306,101 @@ def sync_account(account: Dict) -> Tuple[bool, str, int]:
         
         logger.info(f"Successfully logged in to {login}@{server}")
         
-        # Get account info to verify connection
         account_info = mt5.account_info()
         if not account_info:
             mt5.shutdown()
             return False, "Could not get account info", 0
         
-        # Get trade history
-        # Start from last synced trade time or 1 year ago
-        if account['last_trade_time']:
-            from_date = account['last_trade_time']
-        else:
-            from_date = datetime.now(timezone.utc) - timedelta(days=365)
+        trades_synced = 0
         
-        to_date = datetime.now(timezone.utc)
+        # ============================================
+        # STEP 1: Get ALL closed trades from history
+        # Use last 30 days to get recent trades
+        # ============================================
+        from_date = datetime.now(timezone.utc) - timedelta(days=30)
+        to_date = datetime.now(timezone.utc) + timedelta(days=1)
         
-        # Get closed deals (history)
         deals = mt5.history_deals_get(from_date, to_date)
         
-        trades_synced = 0
-        last_trade_time = account['last_trade_time']
+        # Build a map: position_id -> {entry_deal, exit_deal}
+        position_deals = {}
         
         if deals:
-            logger.info(f"Found {len(deals)} deals in history")
+            logger.info(f"Found {len(deals)} total deals in history")
             
-            # Group deals by position (entry and exit)
-            positions = {}
             for deal in deals:
-                # Skip balance operations, etc.
-                if deal.type > 1:  # 0=BUY, 1=SELL, others are balance/credit/etc
+                # Skip non-trade deals (balance, credit, etc.)
+                # type: 0=BUY, 1=SELL, 2=BALANCE, etc.
+                if deal.type > 1:
                     continue
                 
                 pos_id = deal.position_id
-                if pos_id not in positions:
-                    positions[pos_id] = {'entry': None, 'exit': None}
+                if pos_id == 0:
+                    continue  # Skip invalid position IDs
                 
-                if deal.entry == 0:  # Entry deal
-                    positions[pos_id]['entry'] = deal
-                elif deal.entry == 1:  # Exit deal
-                    positions[pos_id]['exit'] = deal
-            
-            # Process completed positions
-            for pos_id, pos in positions.items():
-                if pos['entry'] and pos['exit']:
-                    entry = pos['entry']
-                    exit = pos['exit']
-                    
-                    trade_data = {
-                        'ticket': pos_id,
-                        'symbol': entry.symbol,
-                        'trade_type': 'buy' if entry.type == 0 else 'sell',
-                        'volume': entry.volume,
-                        'open_price': entry.price,
-                        'close_price': exit.price,
-                        'stop_loss': None,
-                        'take_profit': None,
-                        'open_time': datetime.fromtimestamp(entry.time, tz=timezone.utc),
-                        'close_time': datetime.fromtimestamp(exit.time, tz=timezone.utc),
-                        'profit': exit.profit,
-                        'commission': entry.commission + exit.commission,
-                        'swap': entry.swap + exit.swap if hasattr(entry, 'swap') else 0,
-                        'net_profit': exit.profit + entry.commission + exit.commission,
-                        'is_closed': True
-                    }
-                    
-                    if insert_trade(account['user_id'], trade_data):
-                        trades_synced += 1
-                        trade_time = datetime.fromtimestamp(exit.time, tz=timezone.utc)
-                        if not last_trade_time or trade_time > last_trade_time:
-                            last_trade_time = trade_time
+                if pos_id not in position_deals:
+                    position_deals[pos_id] = {'entry': None, 'exit': None}
+                
+                # entry: 0=IN, 1=OUT, 2=INOUT, 3=OUT_BY
+                if deal.entry == 0:  # DEAL_ENTRY_IN - Opening
+                    position_deals[pos_id]['entry'] = deal
+                elif deal.entry == 1:  # DEAL_ENTRY_OUT - Closing
+                    position_deals[pos_id]['exit'] = deal
         
-        # Also get open positions
-        positions = mt5.positions_get()
-        if positions:
-            logger.info(f"Found {len(positions)} open positions")
-            for pos in positions:
+        # ============================================
+        # STEP 2: Process CLOSED positions
+        # A position is closed if it has both entry AND exit
+        # ============================================
+        closed_position_ids = set()
+        
+        for pos_id, deals_info in position_deals.items():
+            entry = deals_info['entry']
+            exit_deal = deals_info['exit']
+            
+            if entry and exit_deal:
+                closed_position_ids.add(str(pos_id))
+                
+                # The EXIT deal contains the correct final profit!
+                trade_data = {
+                    'ticket': pos_id,
+                    'symbol': entry.symbol,
+                    'trade_type': 'BUY' if entry.type == 0 else 'SELL',
+                    'volume': entry.volume,
+                    'open_price': entry.price,
+                    'close_price': exit_deal.price,
+                    'stop_loss': None,
+                    'take_profit': None,
+                    'open_time': datetime.fromtimestamp(entry.time, tz=timezone.utc),
+                    'close_time': datetime.fromtimestamp(exit_deal.time, tz=timezone.utc),
+                    'profit': exit_deal.profit,  # Final profit is on exit deal!
+                    'commission': entry.commission + exit_deal.commission,
+                    'swap': getattr(exit_deal, 'swap', 0),
+                    'net_profit': exit_deal.profit + entry.commission + exit_deal.commission + getattr(exit_deal, 'swap', 0),
+                    'is_closed': True
+                }
+                
+                if insert_trade(account['user_id'], trade_data):
+                    trades_synced += 1
+                    logger.info(f"Synced closed: {entry.symbol} profit={exit_deal.profit}")
+        
+        logger.info(f"Processed {len(closed_position_ids)} closed positions")
+        
+        # ============================================
+        # STEP 3: Process OPEN positions
+        # ============================================
+        open_positions = mt5.positions_get()
+        open_tickets = set()
+        
+        if open_positions:
+            logger.info(f"Found {len(open_positions)} open positions")
+            
+            for pos in open_positions:
+                open_tickets.add(str(pos.ticket))
+                
                 trade_data = {
                     'ticket': pos.ticket,
                     'symbol': pos.symbol,
-                    'trade_type': 'buy' if pos.type == 0 else 'sell',
+                    'trade_type': 'BUY' if pos.type == 0 else 'SELL',
                     'volume': pos.volume,
                     'open_price': pos.price_open,
                     'close_price': pos.price_current,
@@ -341,19 +409,72 @@ def sync_account(account: Dict) -> Tuple[bool, str, int]:
                     'open_time': datetime.fromtimestamp(pos.time, tz=timezone.utc),
                     'close_time': None,
                     'profit': pos.profit,
-                    'commission': pos.commission if hasattr(pos, 'commission') else 0,
+                    'commission': 0,
                     'swap': pos.swap,
-                    'net_profit': pos.profit,
+                    'net_profit': pos.profit + pos.swap,
                     'is_closed': False
                 }
                 
                 if insert_trade(account['user_id'], trade_data):
                     trades_synced += 1
+                    logger.info(f"Synced open: {pos.symbol} current_profit={pos.profit}")
         
-        # Shutdown MT5
+        # ============================================
+        # STEP 4: Update trades that were open but now closed
+        # ============================================
+        with Session() as session:
+            result = session.execute(text("""
+                SELECT id, mt5_ticket FROM trades 
+                WHERE user_id = :user_id 
+                AND is_closed = false 
+                AND trade_source = 'MT5_AUTO'
+            """), {'user_id': account['user_id']})
+            
+            for row in result:
+                trade_id, ticket = row
+                # If not in current open positions, it must have closed
+                if ticket not in open_tickets:
+                    # Check if we have the closed data
+                    if ticket in closed_position_ids:
+                        pos_data = position_deals.get(int(ticket))
+                        if pos_data and pos_data['exit']:
+                            exit_d = pos_data['exit']
+                            entry_d = pos_data['entry']
+                            session.execute(text("""
+                                UPDATE trades SET
+                                    close_price = :close_price,
+                                    close_time = :close_time,
+                                    profit = :profit,
+                                    commission = :commission,
+                                    swap = :swap,
+                                    net_profit = :net_profit,
+                                    is_closed = true,
+                                    updated_at = NOW()
+                                WHERE id = :trade_id
+                            """), {
+                                'trade_id': trade_id,
+                                'close_price': exit_d.price,
+                                'close_time': datetime.fromtimestamp(exit_d.time, tz=timezone.utc),
+                                'profit': exit_d.profit,
+                                'commission': entry_d.commission + exit_d.commission if entry_d else exit_d.commission,
+                                'swap': getattr(exit_d, 'swap', 0),
+                                'net_profit': exit_d.profit + (entry_d.commission if entry_d else 0) + exit_d.commission + getattr(exit_d, 'swap', 0)
+                            })
+                            logger.info(f"Updated trade {ticket} -> closed, profit={exit_d.profit}")
+                            trades_synced += 1
+                    else:
+                        # Just mark as closed without details
+                        session.execute(text("""
+                            UPDATE trades SET is_closed = true, updated_at = NOW()
+                            WHERE id = :trade_id
+                        """), {'trade_id': trade_id})
+                        logger.info(f"Marked trade {ticket} as closed (no history found)")
+                    
+                    session.commit()
+        
         mt5.shutdown()
         
-        message = f"Synced {trades_synced} new trades"
+        message = f"Synced {trades_synced} trades"
         logger.info(f"User {account['user_id']}: {message}")
         
         return True, message, trades_synced

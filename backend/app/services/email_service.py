@@ -132,8 +132,8 @@ class EmailService:
         Returns:
             True if email was sent successfully
         """
-        # Construct verification URL
-        frontend_url = settings.CORS_ORIGINS.split(',')[0]  # Get first origin
+        # Construct verification URL using dedicated FRONTEND_URL setting
+        frontend_url = settings.FRONTEND_URL.rstrip('/')
         verification_url = f"{frontend_url}/auth/verify-email?token={verification_token}"
         
         subject = "Verify Your Email - Trading Journal"
@@ -202,7 +202,7 @@ class EmailService:
         Returns:
             True if email was sent successfully
         """
-        frontend_url = settings.CORS_ORIGINS.split(',')[0]
+        frontend_url = settings.FRONTEND_URL.rstrip('/')
         reset_url = f"{frontend_url}/auth/reset-password?token={reset_token}"
         
         subject = "Reset Your Password - Trading Journal"

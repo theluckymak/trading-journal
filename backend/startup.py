@@ -51,8 +51,9 @@ def run_migrations():
 
 def start_server():
     """Start the uvicorn server."""
-    print("Starting FastAPI server...")
-    os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"])
+    port = os.environ.get("PORT", "8000")
+    print(f"Starting FastAPI server on port {port}...")
+    os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(port)])
 
 if __name__ == "__main__":
     fix_verification_columns()

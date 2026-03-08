@@ -18,8 +18,8 @@ RUN pip install --no-cache-dir -r requirements-docker.txt
 # Copy application
 COPY . .
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway sets PORT env var dynamically)
+EXPOSE ${PORT:-8000}
 
 # Run migrations then start application
 CMD ["python", "startup.py"]

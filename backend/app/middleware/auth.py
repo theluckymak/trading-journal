@@ -137,7 +137,7 @@ def get_client_info(request: Request) -> tuple[Optional[str], Optional[str]]:
     ip_address = (
         request.headers.get("x-forwarded-for") or
         request.headers.get("x-real-ip") or
-        request.client.host if request.client else None
+        (request.client.host if request.client else None)
     )
     
     return user_agent, ip_address

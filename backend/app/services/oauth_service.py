@@ -9,6 +9,9 @@ import httpx
 from app.config import settings
 from app.models.user import User, UserRole
 from app.services.token_service import token_service
+from app.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class OAuthService:
@@ -55,21 +58,21 @@ class OAuthService:
         """
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                print(f"Fetching Google user info with token: {token[:20]}...")
+                logger.info(f"Fetching Google user info with token: {token[:20]}...")
                 response = await client.get(
                     'https://www.googleapis.com/oauth2/v2/userinfo',
                     headers={'Authorization': f'Bearer {token}'}
                 )
-                print(f"Google API response status: {response.status_code}")
+                logger.info(f"Google API response status: {response.status_code}")
                 response.raise_for_status()
                 user_data = response.json()
-                print(f"Google user data: {user_data}")
+                logger.debug(f"Google user data: {user_data}")
                 return user_data
         except httpx.TimeoutException as e:
-            print(f"Timeout fetching Google user info: {e}")
+            logger.error(f"Timeout fetching Google user info: {e}")
             return None
         except Exception as e:
-            print(f"Error fetching Google user info: {e}")
+            logger.error(f"Error fetching Google user info: {e}")
             return None
     
     async def get_github_user_info(self, token: str) -> Optional[Dict[str, Any]]:
@@ -83,7 +86,7 @@ class OAuthService:
             User info dict with id, email, name, avatar_url
         """
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 # Get user profile
                 user_response = await client.get(
                     'https://api.github.com/user',
@@ -117,7 +120,7 @@ class OAuthService:
                 
                 return user_data
         except Exception as e:
-            print(f"Error fetching GitHub user info: {e}")
+            logger.error(f"Error fetching GitHub user info: {e}")
             return None
     
     def find_or_create_oauth_user(
