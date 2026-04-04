@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
+  Sparkles,
 } from 'lucide-react';
 
 interface Analytics {
@@ -436,6 +437,13 @@ export default function Dashboard() {
                 >
                   <Calendar className="w-5 h-5 text-emerald-400/80" />
                   <span className="text-slate-300 text-sm">Calendar</span>
+                </button>
+                <button
+                  onClick={() => router.push('/ai-insights')}
+                  className="flex flex-col items-center gap-2 p-4 bg-purple-500/10 hover:bg-purple-500/15 rounded-xl transition-all group col-span-2"
+                >
+                  <Sparkles className="w-5 h-5 text-purple-400/80" />
+                  <span className="text-slate-300 text-sm">AI Predictions</span>
                 </button>
               </div>
             </div>

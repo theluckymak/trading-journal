@@ -1,0 +1,8 @@
+# Trained models go here — excluded from git (too large)
+# Run the training notebook to generate model files:
+#   - lstm_model.h5
+#   - rf_model.pkl
+#   - xgb_model.json
+#   - scaler.pkl
+#   - feature_columns.json
+#   - training_metrics.json

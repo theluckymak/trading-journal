@@ -15,6 +15,7 @@ import {
   Plus,
   Menu,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AddTradeModal from './AddTradeModal';
@@ -77,6 +78,7 @@ export default function Sidebar() {
     { href: '/trades', icon: TrendingUp, label: 'Trades' },
     { href: '/analytics', icon: BarChart3, label: 'Analytics' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },
+    { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
     { href: '/contact', icon: MessageSquare, label: 'Contact' },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];

@@ -11,7 +11,7 @@ import traceback
 
 from app.config import settings
 from app.database import init_db
-from app.routes import auth_router, trades_router, journal_router
+from app.routes import auth_router, trades_router, journal_router, ai_router
 from app.routes.chat import router as chat_router
 from app.routes.mt5 import router as mt5_router
 from app.middleware.security_headers import SecurityHeadersMiddleware
@@ -93,6 +93,7 @@ app.include_router(trades_router, prefix="/api")
 app.include_router(journal_router, prefix="/api")
 app.include_router(chat_router)
 app.include_router(mt5_router)
+app.include_router(ai_router)  # AI prediction endpoints
 
 
 @app.on_event("startup")

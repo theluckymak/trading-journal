@@ -1,0 +1,36 @@
+
+==================================================
+Random Forest
+==================================================
+              precision    recall  f1-score   support
+
+   Downtrend       0.92      0.96      0.94       255
+     Uptrend       0.98      0.97      0.98       678
+
+    accuracy                           0.97       933
+   macro avg       0.95      0.96      0.96       933
+weighted avg       0.97      0.97      0.97       933
+
+==================================================
+XGBoost
+==================================================
+              precision    recall  f1-score   support
+
+   Downtrend       0.93      0.95      0.94       255
+     Uptrend       0.98      0.97      0.98       678
+
+    accuracy                           0.97       933
+   macro avg       0.96      0.96      0.96       933
+weighted avg       0.97      0.97      0.97       933
+
+==================================================
+Ensemble
+==================================================
+              precision    recall  f1-score   support
+
+   Downtrend       0.93      0.95      0.94       255
+     Uptrend       0.98      0.97      0.98       678
+
+    accuracy                           0.97       933
+   macro avg       0.95      0.96      0.96       933
+weighted avg       0.97      0.97      0.97       933
