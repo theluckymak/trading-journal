@@ -112,6 +112,3 @@ GET  /api/ai/news/{symbol}
 GET  /api/ai/events
 ```
 
-## License
-
-MIT
