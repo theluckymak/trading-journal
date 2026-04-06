@@ -37,16 +37,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      console.log('Attempting registration...', { email: formData.email });
       await register(formData.email, formData.password, formData.fullName || undefined);
-      console.log('Registration successful, redirecting to check email...');
       // Redirect to check-email page instead of dashboard
       router.push(`/auth/check-email?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
-      console.error('Registration error:', err);
-      console.error('Error response:', err.response);
-      console.error('Error message:', err.message);
-      
       // Handle validation errors (array) or simple error messages (string)
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
@@ -70,23 +64,26 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-md w-full space-y-8 p-8">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
+      <div className="card max-w-md w-full space-y-8 p-8">
         <div className="flex justify-end mb-4">
           <ThemeToggle />
         </div>
         <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-center text-3xl font-bold" style={{ color: 'var(--text)' }}>
             Create Account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Start tracking your trades today
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
+            <div
+              className="px-4 py-3 rounded"
+              style={{ background: 'rgba(255,45,85,0.1)', color: 'var(--error)', border: '1px solid var(--error)' }}
+            >
               {error}
             </div>
           )}
@@ -137,7 +134,7 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">At least 8 characters</p>
+              <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>At least 8 characters</p>
             </div>
 
             <div>
@@ -160,14 +157,14 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-brand w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
 
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+            <Link href="/login" className="font-medium" style={{ color: 'var(--brand)' }}>
               Sign in
             </Link>
           </p>

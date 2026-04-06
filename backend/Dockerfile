@@ -1,11 +1,12 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-# Force rebuild - 2026-01-21
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    g++ \
+    curl \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +19,12 @@ RUN pip install --no-cache-dir -r requirements-docker.txt
 # Copy application
 COPY . .
 
-# Expose port (Railway sets PORT env var dynamically)
+# Create DRL model directory (models mounted or copied at deploy)
+RUN mkdir -p /app/ai/saved_models/drl
+
+ENV DRL_MODEL_DIR=/app/ai/saved_models/drl
+
+# Expose port
 EXPOSE ${PORT:-8000}
 
 # Run migrations then start application

@@ -6,28 +6,20 @@ export default function ThemeToggle() {
   const { isDark, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Avoid hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return (
-      <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 w-9 h-9" />
-    );
+    return <div className="w-9 h-9 rounded-full" style={{ background: 'var(--brand-light)' }} />;
   }
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200"
+      style={{ background: 'var(--brand-light)', color: 'var(--brand)' }}
       aria-label="Toggle theme"
     >
-      {isDark ? (
-        <Sun className="h-5 w-5 text-yellow-500" />
-      ) : (
-        <Moon className="h-5 w-5 text-gray-700" />
-      )}
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }

@@ -19,32 +19,32 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="text-xl" style={{ color: 'var(--text-muted)' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="absolute top-4 right-4">
           <ThemeToggle />
         </div>
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
+          <h1 className="text-5xl font-bold mb-6" style={{ color: 'var(--text)' }}>
             Trading Journal & Analytics
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
+          <p className="text-xl mb-12 max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
             Professional trading journal with MT5 integration. Track your trades,
             analyze performance, and improve your trading strategy.
           </p>
           
           <div className="flex gap-4 justify-center">
-            <Link href="/register" className="btn-primary text-lg px-8 py-3">
+            <Link href="/register" className="btn btn-brand text-lg px-8 py-3">
               Get Started
             </Link>
-            <Link href="/login" className="btn-secondary text-lg px-8 py-3">
+            <Link href="/login" className="btn btn-secondary text-lg px-8 py-3">
               Sign In
             </Link>
           </div>
@@ -52,25 +52,25 @@ export default function HomePage() {
 
         <div className="mt-20 grid md:grid-cols-3 gap-8">
           <div className="card text-center">
-            <div className="text-4xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Analytics</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <div className="text-4xl mb-4"></div>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>Analytics</h3>
+            <p style={{ color: 'var(--text-muted)' }}>
               Win rate, profit factor, expectancy, and detailed performance metrics
             </p>
           </div>
 
           <div className="card text-center">
-            <div className="text-4xl mb-4">🔗</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">MT5 Integration</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <div className="text-4xl mb-4"></div>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>MT5 Integration</h3>
+            <p style={{ color: 'var(--text-muted)' }}>
               Automatic trade import from MetaTrader 5 with secure credentials
             </p>
           </div>
 
           <div className="card text-center">
-            <div className="text-4xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Trade Journal</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <div className="text-4xl mb-4"></div>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>Trade Journal</h3>
+            <p style={{ color: 'var(--text-muted)' }}>
               Detailed notes, tags, screenshots, and analysis for every trade
             </p>
           </div>

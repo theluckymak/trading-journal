@@ -25,7 +25,6 @@ export default function ContactPage() {
       const data = await apiClient.getChatMessages();
       setMessages(data);
     } catch (error: any) {
-      console.error('Failed to fetch messages:', error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +50,6 @@ export default function ContactPage() {
       // Refresh messages immediately after sending
       await fetchMessages();
     } catch (error: any) {
-      console.error('Failed to send message:', error);
       alert('Failed to send message. Please try again.');
       throw error;
     }
@@ -63,7 +61,6 @@ export default function ContactPage() {
       // Refresh messages after deletion
       await fetchMessages();
     } catch (error: any) {
-      console.error('Failed to delete message:', error);
       alert('Failed to delete message. Please try again.');
       throw error;
     }

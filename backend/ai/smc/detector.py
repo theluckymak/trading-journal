@@ -47,7 +47,7 @@ class PatternType(Enum):
 @dataclass
 class Pattern:
     pattern_type: PatternType
-    index: int                      # Bar index where detected
+    index: int                      # Bar index where the pattern is located
     price_level: float              # Key price level
     price_high: Optional[float] = None
     price_low: Optional[float] = None
@@ -55,6 +55,7 @@ class Pattern:
     zone_top: Optional[float] = None
     zone_bottom: Optional[float] = None
     active: bool = True             # Still valid / not mitigated
+    discovery_bar: Optional[int] = None  # Bar at which this pattern becomes knowable (causal)
 
 
 class SMCDetector:
@@ -94,7 +95,7 @@ class SMCDetector:
         self.patterns = []
     
     def detect_all(self) -> list[Pattern]:
-        """Run full SMC detection pipeline."""
+        """Run full SMC detection pipeline (uses lookahead — for visualization only)."""
         self._detect_swings()
         self._detect_bos_choch()
         self._detect_liquidity_sweeps()
@@ -102,6 +103,238 @@ class SMCDetector:
         self._detect_order_blocks()
         self._detect_breaker_blocks()
         return self.patterns
+
+    # ==================================================================
+    # CAUSAL DETECTION — no look-ahead bias (for training & inference)
+    # ==================================================================
+    def detect_causal(self, up_to_bar: int = None) -> list[Pattern]:
+        """
+        Run fully causal SMC detection — no future data used.
+        
+        Swing points are only included once confirmed (lb bars have passed).
+        Order blocks are detected retrospectively (impulse already happened).
+        All patterns at index <= up_to_bar use only data <= up_to_bar.
+        
+        Args:
+            up_to_bar: Latest bar to consider (default: last bar minus lb)
+        """
+        if up_to_bar is None:
+            up_to_bar = self.n - 1
+
+        self.swing_highs = []
+        self.swing_lows = []
+        self.patterns = []
+
+        self._detect_swings_causal(up_to_bar)
+        self._detect_bos_choch_causal(up_to_bar)
+        self._detect_liquidity_sweeps_causal(up_to_bar)
+        self._detect_fvg_causal(up_to_bar)
+        self._detect_order_blocks_causal(up_to_bar)
+        self._detect_breaker_blocks_causal(up_to_bar)
+        return self.patterns
+
+    def _detect_swings_causal(self, up_to_bar: int):
+        """
+        Causal swing detection: a swing at index i is only confirmed
+        once we've seen lb bars AFTER it (i.e., at bar i + lb).
+        So at up_to_bar, confirmed swings are at indices <= up_to_bar - lb.
+        discovery_bar = i + lb (earliest bar at which the swing is knowable).
+        """
+        max_swing_idx = up_to_bar - self.lb
+        for i in range(self.lb, max_swing_idx + 1):
+            left_highs = self.high[i - self.lb : i]
+            right_highs = self.high[i + 1 : i + self.lb + 1]
+            if self.high[i] > left_highs.max() and self.high[i] > right_highs.max():
+                self.swing_highs.append((i, self.high[i]))
+                self.patterns.append(Pattern(
+                    pattern_type=PatternType.SWING_HIGH,
+                    index=i, price_level=self.high[i],
+                    discovery_bar=i + self.lb,
+                ))
+
+            left_lows = self.low[i - self.lb : i]
+            right_lows = self.low[i + 1 : i + self.lb + 1]
+            if self.low[i] < left_lows.min() and self.low[i] < right_lows.min():
+                self.swing_lows.append((i, self.low[i]))
+                self.patterns.append(Pattern(
+                    pattern_type=PatternType.SWING_LOW,
+                    index=i, price_level=self.low[i],
+                    discovery_bar=i + self.lb,
+                ))
+
+    def _detect_bos_choch_causal(self, up_to_bar: int):
+        """Causal BOS/CHoCH using only confirmed swings. discovery_bar = break bar."""
+        if len(self.swing_highs) < 2 or len(self.swing_lows) < 2:
+            return
+
+        for i in range(self.lb * 2, up_to_bar + 1):
+            recent_highs = [(si, sp) for si, sp in self.swing_highs if si < i and i - si < 60]
+            for si, sp in recent_highs:
+                if self.close[i] > sp and self.close[i-1] <= sp:
+                    trend_at_break = self._get_local_trend(si)
+                    if trend_at_break == 'down':
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.CHOCH_BULLISH,
+                            index=i, price_level=sp,
+                            strength=min(1.0, (self.close[i] - sp) / sp * 100),
+                            discovery_bar=i,
+                        ))
+                    elif trend_at_break == 'up':
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.BOS_BULLISH,
+                            index=i, price_level=sp,
+                            discovery_bar=i,
+                        ))
+                    break
+
+            recent_lows = [(si, sp) for si, sp in self.swing_lows if si < i and i - si < 60]
+            for si, sp in recent_lows:
+                if self.close[i] < sp and self.close[i-1] >= sp:
+                    trend_at_break = self._get_local_trend(si)
+                    if trend_at_break == 'up':
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.CHOCH_BEARISH,
+                            index=i, price_level=sp,
+                            strength=min(1.0, (sp - self.close[i]) / sp * 100),
+                            discovery_bar=i,
+                        ))
+                    elif trend_at_break == 'down':
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.BOS_BEARISH,
+                            index=i, price_level=sp,
+                            discovery_bar=i,
+                        ))
+                    break
+
+    def _detect_liquidity_sweeps_causal(self, up_to_bar: int):
+        """Causal liquidity sweeps — only reference confirmed swings. discovery_bar = sweep bar."""
+        for i in range(1, up_to_bar + 1):
+            for si, sp in self.swing_lows:
+                if si >= i or i - si > 40:
+                    continue
+                if (self.low[i] < sp and self.close[i] > sp and
+                    self.close[i] > self.open[i]):
+                    self.patterns.append(Pattern(
+                        pattern_type=PatternType.LIQUIDITY_SWEEP_LOW,
+                        index=i, price_level=sp,
+                        price_low=self.low[i],
+                        strength=min(1.0, abs(sp - self.low[i]) / sp * 200),
+                        discovery_bar=i,
+                    ))
+                    break
+
+            for si, sp in self.swing_highs:
+                if si >= i or i - si > 40:
+                    continue
+                if (self.high[i] > sp and self.close[i] < sp and
+                    self.close[i] < self.open[i]):
+                    self.patterns.append(Pattern(
+                        pattern_type=PatternType.LIQUIDITY_SWEEP_HIGH,
+                        index=i, price_level=sp,
+                        price_high=self.high[i],
+                        strength=min(1.0, abs(self.high[i] - sp) / sp * 200),
+                        discovery_bar=i,
+                    ))
+                    break
+
+    def _detect_fvg_causal(self, up_to_bar: int):
+        """FVG is already causal — 3-candle backward pattern. discovery_bar = pattern bar."""
+        for i in range(2, up_to_bar + 1):
+            if self.low[i] > self.high[i-2]:
+                gap_size = self.low[i] - self.high[i-2]
+                mid_price = (self.low[i] + self.high[i-2]) / 2
+                if gap_size / mid_price > 0.0005:
+                    self.patterns.append(Pattern(
+                        pattern_type=PatternType.FVG_BULLISH,
+                        index=i, price_level=mid_price,
+                        zone_top=self.low[i], zone_bottom=self.high[i-2],
+                        strength=min(1.0, gap_size / mid_price * 100),
+                        discovery_bar=i,
+                    ))
+
+            if self.high[i] < self.low[i-2]:
+                gap_size = self.low[i-2] - self.high[i]
+                mid_price = (self.low[i-2] + self.high[i]) / 2
+                if gap_size / mid_price > 0.0005:
+                    self.patterns.append(Pattern(
+                        pattern_type=PatternType.FVG_BEARISH,
+                        index=i, price_level=mid_price,
+                        zone_top=self.low[i-2], zone_bottom=self.high[i],
+                        strength=min(1.0, gap_size / mid_price * 100),
+                        discovery_bar=i,
+                    ))
+
+    def _detect_order_blocks_causal(self, up_to_bar: int):
+        """
+        Causal order blocks — BACKWARD-LOOKING only.
+        
+        At bar i, check if an impulsive move already happened over [i-3, i].
+        If yes, find the last opposite-color candle before the impulse start.
+        discovery_bar = i (the bar at which the impulse is confirmed).
+        """
+        min_impulse = 3
+
+        for i in range(min_impulse + 1, up_to_bar + 1):
+            impulse_start_close = self.close[i - min_impulse]
+            move = (self.close[i] - impulse_start_close) / impulse_start_close
+
+            if move > 0.01 * self._tf_scale:
+                for j in range(i - min_impulse, max(i - min_impulse - 5, 0) - 1, -1):
+                    if self.close[j] < self.open[j]:
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.ORDER_BLOCK_BULLISH,
+                            index=j, price_level=(self.open[j] + self.close[j]) / 2,
+                            zone_top=self.open[j], zone_bottom=self.close[j],
+                            strength=min(1.0, move * 50),
+                            discovery_bar=i,
+                        ))
+                        break
+
+            elif move < -0.01 * self._tf_scale:
+                for j in range(i - min_impulse, max(i - min_impulse - 5, 0) - 1, -1):
+                    if self.close[j] > self.open[j]:
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.ORDER_BLOCK_BEARISH,
+                            index=j, price_level=(self.open[j] + self.close[j]) / 2,
+                            zone_top=self.close[j], zone_bottom=self.open[j],
+                            strength=min(1.0, abs(move) * 50),
+                            discovery_bar=i,
+                        ))
+                        break
+
+    def _detect_breaker_blocks_causal(self, up_to_bar: int):
+        """Causal breaker blocks — only check breaks that already happened. discovery_bar = break bar."""
+        ob_patterns = [p for p in self.patterns if 'order_block' in p.pattern_type.value]
+
+        for ob in ob_patterns:
+            if ob.zone_top is None or ob.zone_bottom is None:
+                continue
+
+            max_check = min(ob.index + 50, up_to_bar + 1)
+            for i in range(ob.index + 1, max_check):
+                if ob.pattern_type == PatternType.ORDER_BLOCK_BEARISH:
+                    if self.close[i] < ob.zone_bottom:
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.BREAKER_BEARISH,
+                            index=i, price_level=ob.price_level,
+                            zone_top=ob.zone_top, zone_bottom=ob.zone_bottom,
+                            strength=ob.strength * 0.8,
+                            discovery_bar=i,
+                        ))
+                        ob.active = False
+                        break
+
+                elif ob.pattern_type == PatternType.ORDER_BLOCK_BULLISH:
+                    if self.close[i] > ob.zone_top:
+                        self.patterns.append(Pattern(
+                            pattern_type=PatternType.BREAKER_BULLISH,
+                            index=i, price_level=ob.price_level,
+                            zone_top=ob.zone_top, zone_bottom=ob.zone_bottom,
+                            strength=ob.strength * 0.8,
+                            discovery_bar=i,
+                        ))
+                        ob.active = False
+                        break
     
     # ------------------------------------------------------------------
     # 1. SWING HIGHS / LOWS
@@ -417,6 +650,63 @@ class SMCDetector:
     # ------------------------------------------------------------------
     def get_patterns_by_type(self, ptype: PatternType) -> list[Pattern]:
         return [p for p in self.patterns if p.pattern_type == ptype]
+
+    def get_patterns_known_at(self, bar_idx: int) -> list[Pattern]:
+        """Return only patterns that are discoverable by bar_idx (causal filtering)."""
+        return [p for p in self.patterns
+                if p.discovery_bar is not None and p.discovery_bar <= bar_idx]
+
+    def get_setup_at_causal(self, bar_index: int, lookback: int = 30) -> dict:
+        """
+        Causal version of get_setup_at — only uses patterns known at bar_index.
+        """
+        start = max(0, bar_index - lookback)
+        recent = [p for p in self.patterns
+                  if start <= p.index <= bar_index
+                  and (p.discovery_bar is None or p.discovery_bar <= bar_index)]
+
+        sweeps = [p for p in recent if 'liquidity_sweep' in p.pattern_type.value]
+        chochs = [p for p in recent if 'choch' in p.pattern_type.value]
+        fvgs = [p for p in recent if 'fvg' in p.pattern_type.value]
+        breakers = [p for p in recent if 'breaker' in p.pattern_type.value]
+
+        bullish_sweeps = [p for p in sweeps if p.pattern_type == PatternType.LIQUIDITY_SWEEP_LOW]
+        bullish_chochs = [p for p in chochs if p.pattern_type == PatternType.CHOCH_BULLISH]
+        bullish_entries = ([p for p in fvgs if p.pattern_type == PatternType.FVG_BULLISH] +
+                         [p for p in breakers if p.pattern_type == PatternType.BREAKER_BULLISH])
+
+        if bullish_sweeps and bullish_chochs:
+            for sweep in bullish_sweeps:
+                for choch in bullish_chochs:
+                    if choch.index > sweep.index:
+                        entries_after = [e for e in bullish_entries if e.index >= choch.index]
+                        return {
+                            "direction": "bullish",
+                            "sweep": sweep,
+                            "choch": choch,
+                            "entry_zone": entries_after[0] if entries_after else None,
+                            "confidence": min(1.0, (sweep.strength + choch.strength) / 2),
+                        }
+
+        bearish_sweeps = [p for p in sweeps if p.pattern_type == PatternType.LIQUIDITY_SWEEP_HIGH]
+        bearish_chochs = [p for p in chochs if p.pattern_type == PatternType.CHOCH_BEARISH]
+        bearish_entries = ([p for p in fvgs if p.pattern_type == PatternType.FVG_BEARISH] +
+                         [p for p in breakers if p.pattern_type == PatternType.BREAKER_BEARISH])
+
+        if bearish_sweeps and bearish_chochs:
+            for sweep in bearish_sweeps:
+                for choch in bearish_chochs:
+                    if choch.index > sweep.index:
+                        entries_after = [e for e in bearish_entries if e.index >= choch.index]
+                        return {
+                            "direction": "bearish",
+                            "sweep": sweep,
+                            "choch": choch,
+                            "entry_zone": entries_after[0] if entries_after else None,
+                            "confidence": min(1.0, (sweep.strength + choch.strength) / 2),
+                        }
+
+        return None
     
     def get_setup_at(self, bar_index: int, lookback: int = 30) -> dict:
         """

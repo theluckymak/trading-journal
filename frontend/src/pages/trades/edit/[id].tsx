@@ -74,7 +74,6 @@ export default function EditTrade() {
       }
     } catch (err: any) {
       setError('Failed to load trade');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -159,7 +158,7 @@ export default function EditTrade() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                💱 Forex
+                Forex
               </button>
               <button
                 type="button"
@@ -170,7 +169,7 @@ export default function EditTrade() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                📈 Futures
+                Futures
               </button>
               <button
                 type="button"
@@ -322,7 +321,7 @@ export default function EditTrade() {
                   disabled={saving}
                   className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition font-medium text-base"
                 >
-                  {saving ? 'Saving...' : '✓ Update Trade'}
+                  {saving ? 'Saving...' : 'Update Trade'}
                 </button>
                 <button
                   type="button"

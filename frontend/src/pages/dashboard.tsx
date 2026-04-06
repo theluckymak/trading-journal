@@ -16,7 +16,7 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
-  Sparkles,
+  Brain,
 } from 'lucide-react';
 
 interface Analytics {
@@ -46,7 +46,6 @@ interface Trade {
   is_closed: boolean;
 }
 
-// Win Rate Progress Ring Component
 const WinRateRing = ({ percentage }: { percentage: number }) => {
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
@@ -55,41 +54,20 @@ const WinRateRing = ({ percentage }: { percentage: number }) => {
   return (
     <div className="relative w-28 h-28">
       <svg className="w-28 h-28 transform -rotate-90">
+        <circle cx="56" cy="56" r={radius} stroke="var(--border)" strokeWidth="8" fill="none" />
         <circle
-          cx="56"
-          cy="56"
-          r={radius}
-          stroke="rgba(255, 255, 255, 0.08)"
-          strokeWidth="8"
-          fill="none"
-        />
-        <circle
-          cx="56"
-          cy="56"
-          r={radius}
-          stroke="url(#gradient)"
-          strokeWidth="8"
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          cx="56" cy="56" r={radius} stroke="var(--brand)" strokeWidth="8" fill="none"
+          strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-out"
         />
-        <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22d3ee" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-        </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xl font-bold text-white">{percentage.toFixed(1)}%</span>
+        <span className="text-xl font-bold" style={{ color: 'var(--text)' }}>{percentage.toFixed(1)}%</span>
       </div>
     </div>
   );
 };
 
-// Mini Calendar Component
 const MiniCalendar = ({ tradingDays }: { tradingDays: Date[] }) => {
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -97,31 +75,24 @@ const MiniCalendar = ({ tradingDays }: { tradingDays: Date[] }) => {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
-
   const monthName = today.toLocaleString('default', { month: 'long' });
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const isTradingDay = (day: number) => {
-    return tradingDays.some(d => 
-      d.getDate() === day && 
-      d.getMonth() === currentMonth && 
-      d.getFullYear() === currentYear
-    );
+    return tradingDays.some(d => d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear);
   };
 
   return (
-    <div className="glass-card p-5">
+    <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-200 font-medium">Trading Activity</h3>
-        <span className="text-slate-500 text-sm">{monthName}</span>
+        <h3 className="font-medium" style={{ color: 'var(--text)' }}>Trading Activity</h3>
+        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{monthName}</span>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {days.map(day => (
-          <div key={day} className="text-xs text-slate-600 py-1">{day}</div>
+          <div key={day} className="text-xs py-1" style={{ color: 'var(--text-muted)' }}>{day}</div>
         ))}
-        {Array.from({ length: adjustedFirstDay }).map((_, i) => (
-          <div key={`empty-${i}`} className="py-1" />
-        ))}
+        {Array.from({ length: adjustedFirstDay }).map((_, i) => <div key={`e-${i}`} className="py-1" />)}
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1;
           const isToday = day === today.getDate();
@@ -129,13 +100,12 @@ const MiniCalendar = ({ tradingDays }: { tradingDays: Date[] }) => {
           return (
             <div
               key={day}
-              className={`py-1 text-sm rounded-full transition-all ${
-                isToday
-                  ? 'bg-cyan-500/80 text-white font-bold'
-                  : hasTraded
-                  ? 'bg-white/10 text-cyan-300'
-                  : 'text-slate-500 hover:bg-white/5'
-              }`}
+              className="py-1 text-sm rounded-full transition-all"
+              style={{
+                background: isToday ? 'var(--brand)' : hasTraded ? 'var(--brand-light)' : 'transparent',
+                color: isToday ? '#fff' : hasTraded ? 'var(--brand)' : 'var(--text-muted)',
+                fontWeight: isToday ? 700 : 400,
+              }}
             >
               {day}
             </div>
@@ -155,10 +125,7 @@ export default function Dashboard() {
   const [tradingDays, setTradingDays] = useState<Date[]>([]);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    if (!user) { router.push('/login'); return; }
     loadDashboardData();
   }, [user, router]);
 
@@ -169,14 +136,10 @@ export default function Dashboard() {
         apiClient.getAnalytics(),
         apiClient.getTrades({ limit: 10 }),
       ]);
-
       setAnalytics(analyticsRes);
       setTrades(tradesRes);
-      
-      const days = tradesRes.map((t: Trade) => new Date(t.open_time));
-      setTradingDays(days);
+      setTradingDays(tradesRes.map((t: Trade) => new Date(t.open_time)));
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -184,10 +147,7 @@ export default function Dashboard() {
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   };
 
   const getGreeting = () => {
@@ -204,8 +164,8 @@ export default function Dashboard() {
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-cyan-500/60 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="mt-4 text-slate-500">Loading your dashboard...</p>
+            <div className="w-12 h-12 border-3 rounded-full animate-spin mx-auto" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--brand)' }} />
+            <p className="mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>Loading dashboard...</p>
           </div>
         </div>
       </Layout>
@@ -222,124 +182,88 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-semibold text-white mb-1">
-              {getGreeting()}, <span className="text-cyan-400">{userName}</span>
+            <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text)' }}>
+              {getGreeting()}, <span style={{ color: 'var(--brand)' }}>{userName}</span>
             </h1>
-            <p className="text-slate-500 text-sm">Ready for today's market challenges</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Ready for today's market challenges</p>
           </div>
           <div className="flex items-center gap-3 mt-4 lg:mt-0">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search trades..."
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-5 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 w-60 text-sm"
-              />
-            </div>
-            <button 
-              onClick={() => router.push('/trades/new')}
-              className="bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white font-medium px-5 py-2 rounded-full transition-all flex items-center gap-2 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              New Trade
+            <input
+              type="text"
+              placeholder="Search trades..."
+              className="input w-60 text-sm"
+              style={{ borderRadius: '19px' }}
+            />
+            <button onClick={() => router.push('/trades/new')} className="btn btn-brand flex items-center gap-2">
+              <Plus className="w-4 h-4" /> New Trade
             </button>
           </div>
         </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - Stats */}
-          <div className="col-span-12 lg:col-span-8 space-y-6">
+        <div className="grid grid-cols-12 gap-5">
+          {/* Left */}
+          <div className="col-span-12 lg:col-span-8 space-y-5">
             {/* P&L Card */}
-            <div className="glass-card p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-slate-200 font-medium">Trading Performance</h3>
-                <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-slate-300 text-sm focus:outline-none">
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                  <option value="all">All Time</option>
-                </select>
+            <div className="card">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-medium" style={{ color: 'var(--text)' }}>Trading Performance</h3>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* P&L Chart Area */}
-                <div className="bg-white/[0.03] rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-400 text-sm">Total P&L</span>
-                    <span className={`flex items-center gap-1 text-sm ${isProfit ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 rounded-2xl" style={{ background: 'var(--bg-section)' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Total P&L</span>
+                    <span className="flex items-center gap-1 text-sm" style={{ color: isProfit ? 'var(--success)' : 'var(--error)' }}>
                       {isProfit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                       {isProfit ? '+' : ''}{((totalProfit / 10000) * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div className={`text-3xl font-bold mb-2 ${isProfit ? 'text-emerald-400/90' : 'text-rose-400/90'}`}>
+                  <div className="text-3xl font-bold mb-2" style={{ color: isProfit ? 'var(--success)' : 'var(--error)' }}>
                     {formatCurrency(totalProfit)}
                   </div>
-                  <div className="text-slate-500 text-sm">
-                    Goal: $10,000 • Average: {formatCurrency(analytics?.expectancy || 0)}/trade
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Avg: {formatCurrency(analytics?.expectancy || 0)}/trade
                   </div>
-                  {/* Mini Chart */}
-                  <div className="h-20 mt-4 flex items-end gap-1">
+                  <div className="h-16 mt-4 flex items-end gap-1">
                     {[40, 65, 45, 80, 55, 70, 90, 60, 75, 85].map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 bg-gradient-to-t from-cyan-500/30 to-cyan-400/10 rounded-t"
-                        style={{ height: `${h}%` }}
-                      />
+                      <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: 'var(--brand-light)' }}>
+                        <div className="w-full rounded-t" style={{ height: '60%', background: 'var(--brand)', opacity: 0.4, marginTop: '40%' }} />
+                      </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Stats Grid */}
-                <div className="bg-white/[0.03] rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-400 text-sm">Win/Loss Stats</span>
-                    <span className="text-slate-500 text-sm">Breakdown</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Total Trades</span>
-                      <span className="text-white font-semibold text-lg">{analytics?.total_trades || 0}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Avg Win</span>
-                      <span className="text-emerald-400/80 font-medium">{formatCurrency(analytics?.average_win)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Avg Loss</span>
-                      <span className="text-rose-400/80 font-medium">{formatCurrency(analytics?.average_loss)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Profit Factor</span>
-                      <span className="text-cyan-400/80 font-medium">{analytics?.profit_factor?.toFixed(2) || '0.00'}</span>
-                    </div>
+                <div className="p-5 rounded-2xl" style={{ background: 'var(--bg-section)' }}>
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Win/Loss Stats</span>
+                  <div className="space-y-4 mt-4">
+                    {[
+                      { label: 'Total Trades', value: String(analytics?.total_trades || 0), color: 'var(--text)' },
+                      { label: 'Avg Win', value: formatCurrency(analytics?.average_win), color: 'var(--success)' },
+                      { label: 'Avg Loss', value: formatCurrency(analytics?.average_loss), color: 'var(--error)' },
+                      { label: 'Profit Factor', value: analytics?.profit_factor?.toFixed(2) || '0.00', color: 'var(--brand)' },
+                    ].map((s) => (
+                      <div key={s.label} className="flex justify-between items-center">
+                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{s.label}</span>
+                        <span className="font-semibold" style={{ color: s.color }}>{s.value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Recent Trades */}
-            <div className="glass-card p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-slate-200 font-medium">Recent Trades</h3>
-                <button 
-                  onClick={() => router.push('/trades')}
-                  className="text-cyan-400/80 hover:text-cyan-300 text-sm flex items-center gap-1"
-                >
+            <div className="card">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-medium" style={{ color: 'var(--text)' }}>Recent Trades</h3>
+                <button onClick={() => router.push('/trades')} className="text-sm flex items-center gap-1" style={{ color: 'var(--brand)' }}>
                   View All <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
-
               {trades.length === 0 ? (
                 <div className="text-center py-12">
-                  <Activity className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <h4 className="text-slate-200 font-medium mb-2">No trades yet</h4>
-                  <p className="text-slate-500 mb-4">Start tracking your trading journey</p>
-                  <button
-                    onClick={() => router.push('/trades/new')}
-                    className="bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white font-medium px-6 py-2 rounded-full transition-all"
-                  >
-                    Add First Trade
-                  </button>
+                  <Activity className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+                  <h4 className="font-medium mb-2" style={{ color: 'var(--text)' }}>No trades yet</h4>
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Start tracking your trading journey</p>
+                  <button onClick={() => router.push('/trades/new')} className="btn btn-brand">Add First Trade</button>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -347,36 +271,32 @@ export default function Dashboard() {
                     <div
                       key={trade.id}
                       onClick={() => router.push(`/trades/${trade.id}`)}
-                      className="flex items-center justify-between p-4 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl cursor-pointer transition-all group"
+                      className="flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all group"
+                      style={{ background: 'var(--bg-section)' }}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          trade.trade_type === 'buy' ? 'bg-emerald-500/15' : 'bg-rose-500/15'
-                        }`}>
-                          {trade.trade_type === 'buy' ? (
-                            <TrendingUp className="w-5 h-5 text-emerald-400/80" />
-                          ) : (
-                            <TrendingDown className="w-5 h-5 text-rose-400/80" />
-                          )}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ background: trade.trade_type === 'buy' ? 'rgba(41,204,106,0.1)' : 'rgba(255,45,85,0.1)' }}>
+                          {trade.trade_type === 'buy'
+                            ? <TrendingUp className="w-5 h-5" style={{ color: 'var(--success)' }} />
+                            : <TrendingDown className="w-5 h-5" style={{ color: 'var(--error)' }} />
+                          }
                         </div>
                         <div>
-                          <div className="text-slate-200 font-medium">{trade.symbol}</div>
-                          <div className="text-slate-500 text-sm">
-                            {trade.trade_type.toUpperCase()} • {trade.volume} lots
+                          <div className="font-medium" style={{ color: 'var(--text)' }}>{trade.symbol}</div>
+                          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            {trade.trade_type.toUpperCase()} · {trade.volume} lots
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-medium ${
-                          (trade.net_profit || 0) >= 0 ? 'text-emerald-400/80' : 'text-rose-400/80'
-                        }`}>
+                        <div className="font-medium" style={{ color: (trade.net_profit || 0) >= 0 ? 'var(--success)' : 'var(--error)' }}>
                           {formatCurrency(trade.net_profit)}
                         </div>
-                        <div className="text-slate-600 text-sm">
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           {new Date(trade.open_time).toLocaleDateString()}
                         </div>
                       </div>
-                      <Eye className="w-5 h-5 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   ))}
                 </div>
@@ -384,81 +304,72 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
-            {/* Win Rate Card */}
-            <div className="glass-card p-6">
+          {/* Right */}
+          <div className="col-span-12 lg:col-span-4 space-y-5">
+            {/* Win Rate */}
+            <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-slate-200 font-medium">Win Rate</h3>
-                  <p className="text-slate-500 text-sm">Keep improving!</p>
+                  <h3 className="font-medium" style={{ color: 'var(--text)' }}>Win Rate</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Keep improving!</p>
                 </div>
-                <Target className="w-5 h-5 text-cyan-400/70" />
+                <Target className="w-5 h-5" style={{ color: 'var(--brand)' }} />
               </div>
               <div className="flex items-center justify-center py-4">
                 <WinRateRing percentage={winRate} />
               </div>
-              <div className="text-center text-slate-500 text-sm">
-                Goal is 55% • {winRate >= 55 ? '🎯 Target reached!' : `${(55 - winRate).toFixed(1)}% to go`}
+              <div className="text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+                Goal is 55% · {winRate >= 55 ? 'Target reached!' : `${(55 - winRate).toFixed(1)}% to go`}
               </div>
             </div>
 
-            {/* Calendar */}
             <MiniCalendar tradingDays={tradingDays} />
 
             {/* Quick Actions */}
-            <div className="glass-card p-5">
-              <h3 className="text-slate-200 font-medium mb-4">Quick Actions</h3>
+            <div className="card">
+              <h3 className="font-medium mb-4" style={{ color: 'var(--text)' }}>Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'New Trade', icon: Plus, href: '/trades/new' },
+                  { label: 'Journal', icon: Zap, href: '/journal/new' },
+                  { label: 'Analytics', icon: BarChart3, href: '/analytics' },
+                  { label: 'Calendar', icon: Calendar, href: '/calendar' },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() => router.push(item.href)}
+                      className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all"
+                      style={{ background: 'var(--brand-light)' }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: 'var(--brand)' }} />
+                      <span className="text-sm" style={{ color: 'var(--text)' }}>{item.label}</span>
+                    </button>
+                  );
+                })}
                 <button
-                  onClick={() => router.push('/trades/new')}
-                  className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 hover:bg-cyan-500/15 rounded-xl transition-all group"
+                  onClick={() => router.push('/prediction')}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all col-span-2"
+                  style={{ background: 'var(--brand-light)' }}
                 >
-                  <Plus className="w-5 h-5 text-cyan-400/80" />
-                  <span className="text-slate-300 text-sm">New Trade</span>
-                </button>
-                <button
-                  onClick={() => router.push('/journal/new')}
-                  className="flex flex-col items-center gap-2 p-4 bg-violet-500/10 hover:bg-violet-500/15 rounded-xl transition-all group"
-                >
-                  <Zap className="w-5 h-5 text-violet-400/80" />
-                  <span className="text-slate-300 text-sm">Journal</span>
-                </button>
-                <button
-                  onClick={() => router.push('/analytics')}
-                  className="flex flex-col items-center gap-2 p-4 bg-blue-500/10 hover:bg-blue-500/15 rounded-xl transition-all group"
-                >
-                  <BarChart3 className="w-5 h-5 text-blue-400/80" />
-                  <span className="text-slate-300 text-sm">Analytics</span>
-                </button>
-                <button
-                  onClick={() => router.push('/calendar')}
-                  className="flex flex-col items-center gap-2 p-4 bg-emerald-500/10 hover:bg-emerald-500/15 rounded-xl transition-all group"
-                >
-                  <Calendar className="w-5 h-5 text-emerald-400/80" />
-                  <span className="text-slate-300 text-sm">Calendar</span>
-                </button>
-                <button
-                  onClick={() => router.push('/ai-insights')}
-                  className="flex flex-col items-center gap-2 p-4 bg-purple-500/10 hover:bg-purple-500/15 rounded-xl transition-all group col-span-2"
-                >
-                  <Sparkles className="w-5 h-5 text-purple-400/80" />
-                  <span className="text-slate-300 text-sm">AI Predictions</span>
+                  <Brain className="w-5 h-5" style={{ color: 'var(--brand)' }} />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>AI Prediction</span>
                 </button>
               </div>
             </div>
 
-            {/* Performance Tip */}
-            <div className="glass-card p-5 border-l-2 border-cyan-500/50">
+            {/* Tip */}
+            <div className="card" style={{ borderLeft: '3px solid var(--brand)' }}>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-cyan-500/15 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-4 h-4 text-cyan-400/80" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-light)' }}>
+                  <Zap className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                 </div>
                 <div>
-                  <h4 className="text-slate-200 font-medium mb-1">Trading Tip</h4>
-                  <p className="text-slate-500 text-sm">
+                  <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Trading Tip</h4>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {analytics?.profit_factor && analytics.profit_factor < 1.5
-                      ? "Focus on your risk management. Consider reducing position sizes on losing streaks."
+                      ? "Focus on risk management. Consider reducing position sizes on losing streaks."
                       : winRate < 50
                       ? "Review your entry criteria. Quality setups lead to better win rates."
                       : "Great job! Keep journaling your trades to maintain consistency."
@@ -470,15 +381,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .glass-card {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 1rem;
-        }
-      `}</style>
     </Layout>
   );
 }

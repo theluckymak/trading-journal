@@ -1,0 +1,139 @@
+{
+  "version": "v3_causal",
+  "type": "binary",
+  "classes": [
+    "bearish",
+    "bullish"
+  ],
+  "confidence_threshold": 0.6,
+  "causality": "Fully causal \u2014 no look-ahead bias in features",
+  "random_forest": {
+    "test_accuracy": 0.5967307346865457,
+    "f1_weighted": 0.5940609093838017,
+    "auc_roc": 0.6315331905171055,
+    "best_params": {
+      "max_depth": 20,
+      "min_samples_leaf": 8,
+      "n_estimators": 300
+    },
+    "per_class": {
+      "bearish": {
+        "precision": 0.5693318729463308,
+        "recall": 0.5073199297286746,
+        "f1-score": 0.5365400495458299,
+        "support": 5123.0
+      },
+      "bullish": {
+        "precision": 0.6157710458212817,
+        "recall": 0.6729329562468808,
+        "f1-score": 0.6430842607313195,
+        "support": 6011.0
+      },
+      "accuracy": 0.5967307346865457,
+      "macro avg": {
+        "precision": 0.5925514593838063,
+        "recall": 0.5901264429877777,
+        "f1-score": 0.5898121551385747,
+        "support": 11134.0
+      },
+      "weighted avg": {
+        "precision": 0.5944033538293315,
+        "recall": 0.5967307346865457,
+        "f1-score": 0.5940609093838017,
+        "support": 11134.0
+      }
+    }
+  },
+  "xgboost": {
+    "test_accuracy": 0.6384947009161128,
+    "f1_weighted": 0.6318216743703426,
+    "auc_roc": 0.6878174547132067,
+    "best_params": {
+      "colsample_bytree": 0.8,
+      "learning_rate": 0.03,
+      "max_depth": 5,
+      "n_estimators": 500,
+      "subsample": 0.8
+    },
+    "per_class": {
+      "bearish": {
+        "precision": 0.6367713004484304,
+        "recall": 0.49892641030646107,
+        "f1-score": 0.5594834190653387,
+        "support": 5123.0
+      },
+      "bullish": {
+        "precision": 0.6394662921348314,
+        "recall": 0.7574446847446349,
+        "f1-score": 0.6934734597517326,
+        "support": 6011.0
+      },
+      "accuracy": 0.6384947009161128,
+      "macro avg": {
+        "precision": 0.6381187962916309,
+        "recall": 0.628185547525548,
+        "f1-score": 0.6264784394085356,
+        "support": 11134.0
+      },
+      "weighted avg": {
+        "precision": 0.6382262667702335,
+        "recall": 0.6384947009161128,
+        "f1-score": 0.6318216743703426,
+        "support": 11134.0
+      }
+    }
+  },
+  "ensemble": {
+    "test_accuracy": 0.6303215376324771,
+    "f1_weighted": 0.6244702373879619,
+    "auc_roc": 0.6770892377573251,
+    "per_class": {
+      "bearish": {
+        "precision": 0.6222977896526597,
+        "recall": 0.500097599063049,
+        "f1-score": 0.5545454545454546,
+        "support": 5123.0
+      },
+      "bullish": {
+        "precision": 0.6350292147641442,
+        "recall": 0.7413076027283314,
+        "f1-score": 0.684065090574148,
+        "support": 6011.0
+      },
+      "accuracy": 0.6303215376324771,
+      "macro avg": {
+        "precision": 0.628663502208402,
+        "recall": 0.6207026008956902,
+        "f1-score": 0.6193052725598013,
+        "support": 11134.0
+      },
+      "weighted avg": {
+        "precision": 0.6291712040899808,
+        "recall": 0.6303215376324771,
+        "f1-score": 0.6244702373879619,
+        "support": 11134.0
+      }
+    }
+  },
+  "feature_count": 88,
+  "train_size": 51953,
+  "val_size": 11132,
+  "test_size": 11134,
+  "symbols": [
+    "EURUSD=X",
+    "GBPUSD=X",
+    "USDJPY=X",
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "^GSPC",
+    "ES=F",
+    "NQ=F",
+    "BTC-USD",
+    "GC=F",
+    "TSLA"
+  ],
+  "interval": "1h",
+  "step": 1,
+  "forward_bars": 10
+}

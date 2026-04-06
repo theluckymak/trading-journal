@@ -45,7 +45,6 @@ export default function ChatBox({
       await onSendMessage(newMessage);
       setNewMessage('');
     } catch (error) {
-      console.error('Failed to send message:', error);
     } finally {
       setSending(false);
     }
@@ -57,7 +56,6 @@ export default function ChatBox({
     try {
       await onDeleteMessage(messageId);
     } catch (error) {
-      console.error('Failed to delete message:', error);
     }
   };
 

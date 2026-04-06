@@ -24,15 +24,7 @@ export default function AuthCallback() {
 
         const debugMsg = `URL: ${window.location.href}\nHash: ${hash}\nToken: ${accessToken ? 'Present' : 'Missing'}\nProvider: ${provider}`;
         setDebugInfo(debugMsg);
-        console.log('=== OAuth Callback Debug ===');
-        console.log('Full URL:', window.location.href);
-        console.log('Hash:', hash);
-        console.log('Access Token:', accessToken ? 'Present' : 'Missing');
-        console.log('State:', state);
-        console.log('Provider:', provider);
-
         if (!provider || !['google', 'github'].includes(provider)) {
-          console.error('Invalid provider detected');
           setDebugInfo(prev => prev + '\n\nERROR: Invalid provider');
           throw new Error('Invalid OAuth provider');
         }
@@ -64,8 +56,6 @@ export default function AuthCallback() {
         }
 
         setDebugInfo(prev => prev + '\n\nSending to backend...');
-        console.log('Sending token to backend:', provider);
-
         // Send token to backend for verification and user creation
         const response = await fetch(`https://dependable-solace-production-75f7.up.railway.app/api/auth/oauth/${provider}/token`, {
           method: 'POST',
@@ -100,13 +90,9 @@ export default function AuthCallback() {
         }
 
         setDebugInfo(prev => prev + '\n\nSuccess! Redirecting...');
-        console.log('Login successful, redirecting to dashboard');
-
         // Redirect to dashboard
         router.push('/dashboard');
       } catch (error: any) {
-        console.error('OAuth callback error:', error);
-        console.error('Error details:', error.response?.data || error.message);
         const errorMsg = error.response?.data?.detail || error.message || 'Unknown error';
         setDebugInfo(prev => prev + `\n\nERROR: ${errorMsg}`);
         

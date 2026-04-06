@@ -65,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem('user', JSON.stringify(userData));
         }
       } catch (error: any) {
-        console.error('Failed to load user:', error);
         // Only logout if it's a 401 (unauthorized), not on network errors
         if (error?.response?.status === 401) {
           apiClient.logout();

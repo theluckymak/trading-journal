@@ -51,7 +51,6 @@ export default function JournalPage() {
       const data = await apiClient.getJournalEntries();
       setEntries(data);
     } catch (error) {
-      console.error('Failed to load journal entries:', error);
     } finally {
       setLoading(false);
     }
@@ -84,20 +83,19 @@ export default function JournalPage() {
       await apiClient.deleteJournalEntry(id);
       setEntries(entries.filter((e) => e.id !== id));
     } catch (error) {
-      console.error('Failed to delete entry:', error);
       alert('Failed to delete entry');
     }
   };
 
   const getMoodEmoji = (mood: string | null) => {
     const moods: Record<string, string> = {
-      excellent: '😄',
-      good: '🙂',
-      neutral: '😐',
-      bad: '😟',
-      terrible: '😢',
+      excellent: '',
+      good: '',
+      neutral: '',
+      bad: '',
+      terrible: '',
     };
-    return mood ? moods[mood] || '📝' : '📝';
+    return mood ? moods[mood] || '' : '';
   };
 
   const formatDate = (dateString: string) => {
@@ -156,11 +154,11 @@ export default function JournalPage() {
               className="px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Moods</option>
-              <option value="excellent">😄 Excellent</option>
-              <option value="good">🙂 Good</option>
-              <option value="neutral">😐 Neutral</option>
-              <option value="bad">😟 Bad</option>
-              <option value="terrible">😢 Terrible</option>
+              <option value="excellent">Excellent</option>
+              <option value="good">Good</option>
+              <option value="neutral">Neutral</option>
+              <option value="bad">Bad</option>
+              <option value="terrible">Terrible</option>
             </select>
 
             {/* New Entry Button */}

@@ -79,7 +79,6 @@ export default function AIInsights() {
       if (perfRes.status === 'fulfilled' && !perfRes.value.detail) setPerformance(perfRes.value);
       if (impRes.status === 'fulfilled' && !impRes.value.detail) setImportance(impRes.value);
     } catch (err) {
-      console.error('Failed to load AI status:', err);
     }
   };
 

@@ -426,13 +426,158 @@ async def ai_health():
         "..", "..", "ai", "saved_models", "cnn", "chart_cnn.pth"
     )
     
+    drl_ready = _drl_service is not None
+    
     return {
-        "status": "ready" if (service and service.is_loaded) or (smc and smc.is_loaded) else "not_ready",
+        "status": "ready" if (service and service.is_loaded) or (smc and smc.is_loaded) or drl_ready else "not_ready",
         "models_loaded": {
             "lstm": service.lstm_model is not None if service else False,
             "random_forest": service.rf_model is not None if service else False,
             "xgboost": service.xgb_model is not None if service else False,
             "cnn_chart": os.path.exists(cnn_model_path),
             "smc_classifier": smc.is_loaded if smc else False,
+            "drl_ensemble": drl_ready,
         },
     }
+
+
+# ── DRL Ensemble Prediction (h1-rebuild models) ──
+
+_drl_service = None
+
+def get_drl_service():
+    """Lazy-load the DRL ensemble prediction service."""
+    global _drl_service
+    if _drl_service is None:
+        try:
+            from ai.drl.predictor import DRLPredictionService
+            _drl_service = DRLPredictionService()
+            _drl_service.load_models()
+            logger.info("DRL ensemble models loaded")
+        except Exception as e:
+            logger.warning(f"DRL models not loaded: {e}")
+            _drl_service = None
+    return _drl_service
+
+
+@router.get("/drl-predict/{symbol}")
+async def drl_predict(symbol: str):
+    """
+    Get DRL ensemble prediction (PPO + A2C + SAC majority vote).
+    Returns signal direction, confidence, individual votes, regime,
+    entry score with reasons, risk levels, and event status.
+    """
+    svc = get_drl_service()
+    if svc is None:
+        raise HTTPException(status_code=503, detail="DRL models not available")
+    try:
+        return svc.predict(symbol)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"DRL prediction failed for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/events")
+async def get_events(instruments: str = "futures"):
+    """
+    Get upcoming economic calendar events filtered by instrument group.
+    Instrument groups: futures, forex, crypto, stocks
+    """
+    from datetime import datetime, timedelta
+
+    EVENTS_BY_GROUP = {
+        "futures": ["USD", "NQ", "ES", "CL", "GC"],
+        "forex": ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"],
+        "crypto": ["BTC", "ETH", "CRYPTO"],
+        "stocks": ["USD", "SPX", "EARNINGS"],
+    }
+
+    currencies = EVENTS_BY_GROUP.get(instruments, EVENTS_BY_GROUP["futures"])
+
+    try:
+        svc = get_drl_service()
+        if svc and hasattr(svc, 'get_upcoming_events'):
+            events = svc.get_upcoming_events(currencies)
+            return events
+    except Exception as e:
+        logger.warning(f"Events fetch failed: {e}")
+
+    # Fallback: return static calendar events
+    return []
+
+
+@router.get("/news/{symbol}")
+async def get_symbol_news(symbol: str):
+    """
+    Get recent news for a symbol using yfinance.
+    Returns list of news items with title, publisher, time, link, and sentiment.
+    """
+    try:
+        import yfinance as yf
+        from datetime import datetime, timezone
+
+        # Map common names to yfinance tickers
+        ticker_map = {
+            "NQ": "NQ=F", "ES": "ES=F", "YM": "YM=F", "RTY": "RTY=F",
+            "CL": "CL=F", "GC": "GC=F",
+            "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X",
+            "USDJPY": "USDJPY=X", "AUDUSD": "AUDUSD=X",
+            "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD",
+            "AAPL": "AAPL", "TSLA": "TSLA", "NVDA": "NVDA", "MSFT": "MSFT",
+            "META": "META", "GOOGL": "GOOGL", "AMZN": "AMZN",
+        }
+        symbol_clean = symbol.replace("/", "").upper()
+        ticker_str = ticker_map.get(symbol, ticker_map.get(symbol_clean, symbol))
+
+        ticker = yf.Ticker(ticker_str)
+        raw_news = ticker.news if hasattr(ticker, 'news') else []
+
+        if not raw_news:
+            return []
+
+        # Bearish/bullish keyword heuristic for sentiment
+        bearish = {"fall", "drop", "crash", "decline", "loss", "bear", "sell", "risk",
+                   "fear", "recession", "down", "cut", "miss", "warning", "weak", "tariff"}
+        bullish = {"rise", "gain", "rally", "bull", "buy", "surge", "profit", "beat",
+                   "growth", "up", "strong", "record", "high", "boost", "upgrade"}
+
+        news_items = []
+        for item in raw_news[:10]:
+            title = item.get("title", "") or item.get("content", {}).get("title", "")
+            publisher = item.get("publisher", "") or item.get("content", {}).get("provider", {}).get("displayName", "")
+            link = item.get("link", "") or item.get("content", {}).get("canonicalUrl", {}).get("url", "")
+
+            pub_time = ""
+            ts = item.get("providerPublishTime") or item.get("content", {}).get("pubDate", "")
+            if isinstance(ts, (int, float)):
+                pub_time = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%b %d, %H:%M UTC")
+            elif isinstance(ts, str) and ts:
+                pub_time = ts[:16]
+
+            # Simple sentiment
+            title_lower = title.lower()
+            b_count = sum(1 for w in bullish if w in title_lower)
+            s_count = sum(1 for w in bearish if w in title_lower)
+            if b_count > s_count:
+                sentiment = "positive"
+            elif s_count > b_count:
+                sentiment = "negative"
+            else:
+                sentiment = "neutral"
+
+            if title:
+                news_items.append({
+                    "title": title,
+                    "publisher": publisher,
+                    "time": pub_time,
+                    "link": link,
+                    "sentiment": sentiment,
+                })
+
+        return news_items
+
+    except Exception as e:
+        logger.warning(f"News fetch failed for {symbol}: {e}")
+        return []

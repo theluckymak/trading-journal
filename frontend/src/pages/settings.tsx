@@ -121,7 +121,6 @@ export default function SettingsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch MT5 status:', error);
     } finally {
       setMt5Loading(false);
     }
@@ -153,7 +152,6 @@ export default function SettingsPage() {
         setMessage({ type: 'error', text: error.detail || 'Failed to save MT5 credentials' });
       }
     } catch (error) {
-      console.error('Failed to save MT5 credentials:', error);
       setMessage({ type: 'error', text: 'Failed to save MT5 credentials' });
     } finally {
       setMt5Saving(false);
@@ -176,7 +174,6 @@ export default function SettingsPage() {
         await fetchMt5Status();
       }
     } catch (error) {
-      console.error('Failed to toggle MT5 sync:', error);
     }
   };
 
@@ -203,7 +200,6 @@ export default function SettingsPage() {
         setMessage({ type: 'success', text: 'MT5 credentials removed' });
       }
     } catch (error) {
-      console.error('Failed to remove MT5 credentials:', error);
     }
   };
 
@@ -213,24 +209,18 @@ export default function SettingsPage() {
     setMessage(null);
 
     try {
-      console.log('Updating profile with data:', profileData);
       const result = await apiClient.updateProfile(profileData);
-      console.log('Profile update successful:', result);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       
       // Reload user data
       if (user) {
         const updatedUser = await apiClient.getCurrentUser();
-        console.log('Updated user data:', updatedUser);
         // Update session storage
         sessionStorage.setItem('user', JSON.stringify(updatedUser));
         // Force reload to update context
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (error: any) {
-      console.error('Failed to update profile:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      
       // Handle fetch API error structure
       let errorMessage = 'Failed to update profile';
       if (error?.response?.data?.detail) {
@@ -275,7 +265,6 @@ export default function SettingsPage() {
         confirm_password: '',
       });
     } catch (error) {
-      console.error('Failed to change password:', error);
       setMessage({ type: 'error', text: 'Failed to change password' });
     } finally {
       setLoading(false);
@@ -287,8 +276,8 @@ export default function SettingsPage() {
       <div className="p-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>Settings</h1>
+          <p style={{ color: 'var(--text-muted)' }}>
             Manage your account settings and preferences
           </p>
         </div>
@@ -296,32 +285,33 @@ export default function SettingsPage() {
         {/* Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className="mb-6 p-4 rounded-lg"
+            style={
               message.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-            }`}
+                ? { background: 'rgba(41,204,106,0.1)', color: 'var(--success)' }
+                : { background: 'rgba(255,45,85,0.1)', color: 'var(--error)' }
+            }
           >
             {message.text}
           </div>
         )}
 
         {/* User ID Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div className="p-6 mb-6" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-cyan-100 dark:bg-cyan-900 rounded-lg">
-              <Shield className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            <div className="p-2 rounded-lg" style={{ background: 'var(--brand-light)' }}>
+              <Shield className="h-5 w-5" style={{ color: 'var(--brand)' }} />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">User ID</h2>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>User ID</h2>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>
                 Your unique user identifier. Use this when contacting support.
               </p>
               <div className="flex items-center gap-3">
-                <code className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-lg font-mono text-gray-900 dark:text-white">
+                <code className="px-4 py-2 rounded-lg text-lg font-mono" style={{ background: 'var(--bg-section)', color: 'var(--text)' }}>
                   UID: {user?.id || '---'}
                 </code>
                 <button
@@ -332,13 +322,14 @@ export default function SettingsPage() {
                       setTimeout(() => setCopied(false), 2000);
                     }
                   }}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition text-gray-600 dark:text-gray-300"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition"
+                  style={{ background: 'var(--bg-section)', color: 'var(--text-muted)' }}
                   title="Copy User ID"
                 >
                   {copied ? (
                     <>
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-green-500">Copied!</span>
+                      <Check className="h-4 w-4" style={{ color: 'var(--success)' }} />
+                      <span className="text-sm" style={{ color: 'var(--success)' }}>Copied!</span>
                     </>
                   ) : (
                     <>
@@ -353,25 +344,26 @@ export default function SettingsPage() {
         </div>
 
         {/* MT5 Auto-Sync Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div className="p-6 mb-6" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <div className="p-2 rounded-lg" style={{ background: 'var(--brand-light)' }}>
+              <TrendingUp className="h-5 w-5" style={{ color: 'var(--brand)' }} />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">MT5 Auto-Sync</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>MT5 Auto-Sync</h2>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 Connect your MT5 account to automatically sync trades
               </p>
             </div>
             {mt5Status?.has_config && (
               <button
                 onClick={handleMt5Toggle}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className="px-4 py-2 rounded-lg font-medium transition"
+                style={
                   mt5Status.is_active
-                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                    ? { background: 'rgba(41,204,106,0.1)', color: 'var(--success)' }
+                    : { background: 'var(--bg-section)', color: 'var(--text-muted)' }
+                }
               >
                 {mt5Status.is_active ? 'Sync Active' : 'Sync Paused'}
               </button>
@@ -380,16 +372,16 @@ export default function SettingsPage() {
 
           {/* Sync Status */}
           {mt5Status?.has_config && (
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="mb-6 p-4 rounded-lg" style={{ background: 'var(--bg-section)' }}>
               <div className="flex items-center gap-3 mb-2">
                 {mt5Status.last_sync_status === 'success' ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-5 w-5" style={{ color: 'var(--success)' }} />
                 ) : mt5Status.last_sync_status === 'error' ? (
-                  <XCircle className="h-5 w-5 text-red-500" />
+                  <XCircle className="h-5 w-5" style={{ color: 'var(--error)' }} />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                  <AlertCircle className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
                 )}
-                <span className="font-medium text-gray-900 dark:text-white">
+                <span className="font-medium" style={{ color: 'var(--text)' }}>
                   {mt5Status.last_sync_status === 'success'
                     ? 'Last sync successful'
                     : mt5Status.last_sync_status === 'error'
@@ -398,12 +390,12 @@ export default function SettingsPage() {
                 </span>
               </div>
               {mt5Status.last_sync_at && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Last sync: {new Date(mt5Status.last_sync_at).toLocaleString()}
                 </p>
               )}
               {mt5Status.last_sync_message && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
                   {mt5Status.last_sync_message}
                 </p>
               )}
@@ -412,40 +404,40 @@ export default function SettingsPage() {
 
           {mt5Loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--text-muted)' }} />
             </div>
           ) : (
             <form onSubmit={handleMt5Save} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                     MT5 Login (Account Number)
                   </label>
                   <input
                     type="text"
                     value={mt5Config.mt5_login}
                     onChange={(e) => setMt5Config({ ...mt5Config, mt5_login: e.target.value })}
-                    className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    className="input w-full"
                     placeholder="e.g., 12345678"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                     MT5 Server
                   </label>
                   <input
                     type="text"
                     value={mt5Config.mt5_server}
                     onChange={(e) => setMt5Config({ ...mt5Config, mt5_server: e.target.value })}
-                    className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    className="input w-full"
                     placeholder="e.g., ICMarkets-Demo"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                   MT5 Password {mt5Status?.has_config && '(leave blank to keep current)'}
                 </label>
                 <div className="relative">
@@ -453,13 +445,15 @@ export default function SettingsPage() {
                     type={showMt5Password ? 'text' : 'password'}
                     value={mt5Config.mt5_password}
                     onChange={(e) => setMt5Config({ ...mt5Config, mt5_password: e.target.value })}
-                    className="w-full px-4 py-2 pr-10 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-2 pr-10 rounded-lg border"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                     placeholder={mt5Status?.has_config ? '••••••••' : 'Enter MT5 password'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowMt5Password(!showMt5Password)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {showMt5Password ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -467,7 +461,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                   Sync Interval (minutes)
                 </label>
                 <select
@@ -475,7 +469,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setMt5Config({ ...mt5Config, sync_interval_minutes: parseInt(e.target.value) })
                   }
-                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                  className="input w-full"
                 >
                   <option value={1}>Every 1 minute</option>
                   <option value={5}>Every 5 minutes</option>
@@ -489,7 +483,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={mt5Saving || !mt5Config.mt5_login || !mt5Config.mt5_server}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="btn btn-brand flex items-center gap-2"
                 >
                   {mt5Saving ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -503,14 +497,15 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={handleMt5Delete}
-                    className="px-6 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                    className="px-6 py-2.5 rounded-lg transition"
+                    style={{ color: 'var(--error)' }}
                   >
                     Remove Credentials
                   </button>
                 )}
               </div>
 
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
                 <AlertCircle className="h-4 w-4 inline mr-1" />
                 Your credentials are encrypted. We only use them to sync your trades.
               </p>
@@ -519,41 +514,41 @@ export default function SettingsPage() {
         </div>
 
         {/* Profile Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div className="p-6 mb-6" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 rounded-lg" style={{ background: 'var(--brand-light)' }}>
+              <User className="h-5 w-5" style={{ color: 'var(--brand)' }} />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h2>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Profile Information</h2>
           </div>
 
           <form onSubmit={handleProfileUpdate} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                 Full Name
               </label>
               <input
                 type="text"
                 value={profileData.full_name}
                 onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="input w-full"
                 placeholder="Enter your full name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                 Email Address
               </label>
               <input
                 type="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="input w-full"
                 placeholder="your.email@example.com"
                 disabled
               />
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
                 Email cannot be changed
               </p>
             </div>
@@ -562,7 +557,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="btn btn-brand flex items-center gap-2"
               >
                 <Save className="h-5 w-5" />
                 {loading ? 'Saving...' : 'Save Changes'}
@@ -573,17 +568,17 @@ export default function SettingsPage() {
 
         {/* Password Section */}
         {!user?.oauth_provider && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <div className="p-6 mb-6" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <Key className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 rounded-lg" style={{ background: 'var(--brand-light)' }}>
+                <Key className="h-5 w-5" style={{ color: 'var(--brand)' }} />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Change Password</h2>
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Change Password</h2>
             </div>
 
             <form onSubmit={handlePasswordChange} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                   Current Password
                 </label>
                 <div className="relative">
@@ -593,13 +588,15 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       setPasswordData({ ...passwordData, current_password: e.target.value })
                     }
-                    className="w-full px-4 py-2 pr-10 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 pr-10 rounded-lg border"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                     placeholder="Enter current password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -607,7 +604,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                   New Password
                 </label>
                 <input
@@ -616,13 +613,13 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, new_password: e.target.value })
                   }
-                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="input w-full"
                   placeholder="Enter new password"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                   Confirm New Password
                 </label>
                 <input
@@ -631,7 +628,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirm_password: e.target.value })
                   }
-                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="input w-full"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -640,7 +637,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="btn btn-brand flex items-center gap-2"
                 >
                   <Key className="h-5 w-5" />
                   {loading ? 'Changing...' : 'Change Password'}
@@ -652,14 +649,14 @@ export default function SettingsPage() {
 
         {/* OAuth Info */}
         {user?.oauth_provider && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 mb-6">
+          <div className="rounded-lg p-6 mb-6" style={{ background: 'var(--brand-light)' }}>
             <div className="flex items-center gap-3">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <Shield className="h-6 w-6" style={{ color: 'var(--brand)' }} />
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
+                <h3 className="font-semibold" style={{ color: 'var(--text)' }}>
                   OAuth Authentication
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
                   You're signed in with {user.oauth_provider}. Password change is not available for OAuth accounts.
                 </p>
               </div>
@@ -668,31 +665,34 @@ export default function SettingsPage() {
         )}
 
         {/* Account Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="p-6" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <Shield className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <div className="p-2 rounded-lg" style={{ background: 'var(--bg-section)' }}>
+              <Shield className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Account Information</h2>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Account Information</h2>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
-              <span className="text-gray-600 dark:text-gray-400">Account Type</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Account Type</span>
+              <span className="font-medium" style={{ color: 'var(--text)' }}>
                 {user?.oauth_provider ? `OAuth (${user.oauth_provider})` : 'Email/Password'}
               </span>
             </div>
-            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
-              <span className="text-gray-600 dark:text-gray-400">Role</span>
-              <span className="font-medium text-gray-900 dark:text-white capitalize">
+            <div className="flex items-center justify-between py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Role</span>
+              <span className="font-medium capitalize" style={{ color: 'var(--text)' }}>
                 {mounted && user?.role}
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600 dark:text-gray-400">Account Status</span>
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 rounded-full text-sm font-medium">
-                <span className="h-2 w-2 bg-green-600 rounded-full"></span>
+              <span style={{ color: 'var(--text-muted)' }}>Account Status</span>
+              <span
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
+                style={{ background: 'rgba(41,204,106,0.1)', color: 'var(--success)' }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ background: 'var(--success)' }}></span>
                 Active
               </span>
             </div>

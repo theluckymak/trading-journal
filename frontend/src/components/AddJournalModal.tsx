@@ -125,7 +125,6 @@ export default function AddJournalModal({ isOpen, onClose, onSuccess }: AddJourn
         if (onSuccess) onSuccess();
       }, 1500);
     } catch (error) {
-      console.error('Failed to create entry:', error);
       setError('Failed to create journal entry. Please try again.');
     } finally {
       setSubmitting(false);
@@ -205,11 +204,11 @@ export default function AddJournalModal({ isOpen, onClose, onSuccess }: AddJourn
                   onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
                   className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="excellent">😄 Excellent</option>
-                  <option value="good">🙂 Good</option>
-                  <option value="neutral">😐 Neutral</option>
-                  <option value="bad">😟 Bad</option>
-                  <option value="terrible">😢 Terrible</option>
+                  <option value="excellent">Excellent</option>
+                  <option value="good">Good</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="bad">Bad</option>
+                  <option value="terrible">Terrible</option>
                 </select>
               </div>
             </div>

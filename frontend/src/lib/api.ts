@@ -4,8 +4,8 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Railway backend URL - always use the production backend
-const API_URL = 'https://dependable-solace-production-75f7.up.railway.app';
+// Use env var or fallback to relative path for Docker
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -170,7 +170,6 @@ class ApiClient {
           refresh_token: this.refreshToken,
         });
       } catch (error) {
-        console.error('Logout error:', error);
       }
     }
     this.logout();
@@ -201,21 +200,13 @@ class ApiClient {
   }
 
   async updateProfile(data: { full_name?: string; email?: string }) {
-    console.log('[updateProfile] Starting with data:', data);
-    
     // Use native fetch instead of axios due to network issues
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : this.accessToken;
-    
-    console.log('[updateProfile] Access token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NONE');
-    
     if (!accessToken) {
       throw { response: { status: 401, data: { detail: 'Not authenticated' } } };
     }
 
     const url = `${API_URL}/api/auth/me`;
-    console.log('[updateProfile] URL:', url);
-    console.log('[updateProfile] Request body:', JSON.stringify(data));
-
     try {
       const response = await fetch(url, {
         method: 'PATCH',
@@ -226,21 +217,14 @@ class ApiClient {
         credentials: 'include',
         body: JSON.stringify(data),
       });
-
-      console.log('[updateProfile] Response status:', response.status);
-      console.log('[updateProfile] Response ok:', response.ok);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('[updateProfile] Error response:', errorData);
         throw { response: { data: errorData, status: response.status } };
       }
 
       const result = await response.json();
-      console.log('[updateProfile] Success result:', result);
       return result;
     } catch (error: any) {
-      console.error('[updateProfile] Fetch error:', error);
       throw error;
     }
   }
@@ -358,7 +342,6 @@ class ApiClient {
    * Send a chat message
    */
   async sendChatMessage(message: string, conversationUserId?: number) {
-    console.log('[sendChatMessage] Sending message');
     const accessToken = localStorage.getItem('accessToken');
     
     const body: any = { message };
@@ -378,7 +361,6 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[sendChatMessage] Error:', errorData);
       throw { response: { data: errorData, status: response.status } };
     }
 
@@ -389,7 +371,6 @@ class ApiClient {
    * Get chat messages
    */
   async getChatMessages(conversationUserId?: number, limit: number = 100, offset: number = 0) {
-    console.log('[getChatMessages] Fetching messages');
     const accessToken = localStorage.getItem('accessToken');
     
     let url = `${API_URL}/api/chat/messages?limit=${limit}&offset=${offset}`;
@@ -407,7 +388,6 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[getChatMessages] Error:', errorData);
       throw { response: { data: errorData, status: response.status } };
     }
 
@@ -418,7 +398,6 @@ class ApiClient {
    * Delete a chat message
    */
   async deleteChatMessage(messageId: number) {
-    console.log('[deleteChatMessage] Deleting message:', messageId);
     const accessToken = localStorage.getItem('accessToken');
     
     const response = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
@@ -431,7 +410,6 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[deleteChatMessage] Error:', errorData);
       throw { response: { data: errorData, status: response.status } };
     }
 
@@ -442,7 +420,6 @@ class ApiClient {
    * Get list of users with messages (admin only)
    */
   async getUsersWithMessages() {
-    console.log('[getUsersWithMessages] Fetching users');
     const accessToken = localStorage.getItem('accessToken');
     
     const response = await fetch(`${API_URL}/api/chat/admin/users`, {
@@ -455,7 +432,6 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[getUsersWithMessages] Error:', errorData);
       throw { response: { data: errorData, status: response.status } };
     }
 
@@ -466,7 +442,6 @@ class ApiClient {
    * Get admin statistics
    */
   async getAdminStats() {
-    console.log('[getAdminStats] Fetching admin stats');
     const accessToken = localStorage.getItem('accessToken');
     
     const response = await fetch(`${API_URL}/api/chat/admin/stats`, {
@@ -479,10 +454,48 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[getAdminStats] Error:', errorData);
       throw { response: { data: errorData, status: response.status } };
     }
 
+    return await response.json();
+  }
+
+  // =====================================
+  // AI Prediction Methods
+  // =====================================
+
+  async getDrlPrediction(symbol: string) {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/api/ai/drl-predict/${encodeURIComponent(symbol)}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      credentials: 'include',
+    });
+    if (!response.ok) throw { response: { status: response.status } };
+    return await response.json();
+  }
+
+  async getAiEvents(instruments: string) {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/api/ai/events?instruments=${encodeURIComponent(instruments)}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      credentials: 'include',
+    });
+    if (!response.ok) throw { response: { status: response.status } };
+    return await response.json();
+  }
+
+  async updateUserPreferences(prefs: { preferred_instruments?: string }) {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/api/auth/preferences`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify(prefs),
+    });
+    if (!response.ok) throw { response: { status: response.status } };
     return await response.json();
   }
 }

@@ -196,10 +196,8 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
           });
 
           if (!journalResponse.ok) {
-            console.error('Failed to create journal entry');
           }
         } catch (journalError) {
-          console.error('Error creating journal entry:', journalError);
         }
       }
 
@@ -224,72 +222,48 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+      <div className="rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-md)' }}>
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 border-b px-6 py-4 flex items-center justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Trade</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Record your trading activity</p>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Add New Trade</h2>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Record your trading activity</p>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            className="p-2 rounded-lg transition hover:opacity-80"
           >
-            <X className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <X className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
 
         {/* Market Type Tabs */}
-        <div className="border-b dark:border-gray-700">
+        <div className="border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex">
-            <button
-              type="button"
-              onClick={() => {
-                setMarketType('forex');
-                setFormData({ ...formData, symbol: '' });
-              }}
-              className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
-                marketType === 'forex'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-              }`}
-            >
-              💱 Forex
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMarketType('futures');
-                setFormData({ ...formData, symbol: '' });
-              }}
-              className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
-                marketType === 'futures'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-              }`}
-            >
-              📈 Futures
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMarketType('crypto');
-                setFormData({ ...formData, symbol: '' });
-              }}
-              className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition ${
-                marketType === 'crypto'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-              }`}
-            >
-              ₿ Crypto
-            </button>
+            {(['forex', 'futures', 'crypto'] as MarketType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => {
+                  setMarketType(type);
+                  setFormData({ ...formData, symbol: '' });
+                }}
+                className="flex-1 px-6 py-4 text-sm font-medium border-b-2 transition"
+                style={
+                  marketType === type
+                    ? { borderColor: 'var(--brand)', color: 'var(--brand)', background: 'var(--brand-light)' }
+                    : { borderColor: 'transparent', color: 'var(--text-muted)' }
+                }
+              >
+                {type === 'forex' ? 'Forex' : type === 'futures' ? 'Futures' : 'Crypto'}
+              </button>
+            ))}
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
           {success && (
-            <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg flex items-center">
+            <div className="mb-6 px-4 py-3 rounded-lg flex items-center" style={{ background: 'rgba(41,204,106,0.1)', color: 'var(--success)', border: '1px solid var(--success)' }}>
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -297,7 +271,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
             </div>
           )}
           {error && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+            <div className="mb-6 px-4 py-3 rounded-lg" style={{ background: 'rgba(255,45,85,0.1)', color: 'var(--error)', border: '1px solid var(--error)' }}>
               {error}
             </div>
           )}
@@ -305,13 +279,14 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
           <div className="space-y-6">
             {/* Symbol Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label block text-sm font-medium mb-2">
                 Select Symbol *
               </label>
               <select
                 value={formData.symbol}
                 onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                 required
               >
                 <option value="">Choose a symbol...</option>
@@ -326,13 +301,14 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Trade Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   Direction *
                 </label>
                 <select
                   value={formData.trade_type}
                   onChange={(e) => setFormData({ ...formData, trade_type: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   required
                 >
                   <option value="buy">Buy / Long</option>
@@ -342,7 +318,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
 
               {/* Volume */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   {marketType === 'forex' ? 'Lots' : marketType === 'futures' ? 'Contracts' : 'Amount'} *
                 </label>
                 <input
@@ -350,7 +326,8 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                   step="0.01"
                   value={formData.volume}
                   onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   placeholder={marketType === 'forex' ? '1.0' : marketType === 'futures' ? '1' : '0.1'}
                   required
                 />
@@ -358,7 +335,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
 
               {/* Open Price */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   Entry Price *
                 </label>
                 <input
@@ -366,7 +343,8 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                   step="0.00001"
                   value={formData.open_price}
                   onChange={(e) => setFormData({ ...formData, open_price: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   placeholder="Entry price"
                   required
                 />
@@ -374,7 +352,7 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
 
               {/* Close Price */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   Exit Price
                 </label>
                 <input
@@ -382,71 +360,76 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                   step="0.00001"
                   value={formData.close_price}
                   onChange={(e) => setFormData({ ...formData, close_price: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   placeholder="Leave empty if still open"
                 />
               </div>
 
               {/* Open Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   Entry Time
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.open_time}
                   onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty for current time</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Leave empty for current time</p>
               </div>
 
               {/* Close Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label block text-sm font-medium mb-2">
                   Exit Time
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.close_time}
                   onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   disabled={!formData.close_price}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Only if trade is closed</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Only if trade is closed</p>
               </div>
             </div>
 
             {/* Closed Checkbox */}
-            <div className="pt-4 border-t dark:border-gray-700">
+            <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={formData.is_closed}
                   onChange={(e) => setFormData({ ...formData, is_closed: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                  className="w-5 h-5 rounded"
+                  style={{ accentColor: 'var(--brand)' }}
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">This trade is closed</span>
+                <span className="ml-3 text-sm font-medium" style={{ color: 'var(--text)' }}>This trade is closed</span>
               </label>
             </div>
 
             {/* Journal Toggle */}
-            <div className="pt-4 border-t dark:border-gray-700">
+            <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeJournal}
                   onChange={(e) => setIncludeJournal(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                  className="w-5 h-5 rounded"
+                  style={{ accentColor: 'var(--brand)' }}
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Add Journal Entry</span>
+                <span className="ml-3 text-sm font-medium" style={{ color: 'var(--text)' }}>Add Journal Entry</span>
               </label>
             </div>
 
             {/* Journal Section */}
             {includeJournal && (
-              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Journal Details</h3>
+              <div className="space-y-4 p-4 rounded-lg border" style={{ background: 'var(--bg-section)', borderColor: 'var(--border)' }}>
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>Journal Details</h3>
                 
                 {/* Photo Toggles */}
                 <div className="flex gap-4 mb-4">
@@ -455,9 +438,10 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                       type="checkbox"
                       checked={includeSetupPhoto}
                       onChange={(e) => setIncludeSetupPhoto(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 rounded"
+                      style={{ accentColor: 'var(--brand)' }}
                     />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Setup Photo</span>
+                    <span className="ml-2 text-sm" style={{ color: 'var(--text-muted)' }}>Setup Photo</span>
                   </label>
                   
                   <label className="flex items-center cursor-pointer">
@@ -465,45 +449,48 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                       type="checkbox"
                       checked={includeTradePhoto}
                       onChange={(e) => setIncludeTradePhoto(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 rounded"
+                      style={{ accentColor: 'var(--brand)' }}
                     />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Trade Photo</span>
+                    <span className="ml-2 text-sm" style={{ color: 'var(--text-muted)' }}>Trade Photo</span>
                   </label>
                 </div>
 
                 {/* Setup Photo Upload */}
                 {includeSetupPhoto && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="label block text-sm font-medium mb-2">
                       Setup Photo (Before Trade)
                     </label>
                     <input
                       type="file"
                       accept="image/*"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload your pre-trade setup/analysis</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Upload your pre-trade setup/analysis</p>
                   </div>
                 )}
 
                 {/* Trade Photo Upload */}
                 {includeTradePhoto && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="label block text-sm font-medium mb-2">
                       Trade Photo (Execution)
                     </label>
                     <input
                       type="file"
                       accept="image/*"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload your final trade screenshot</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Upload your final trade screenshot</p>
                   </div>
                 )}
 
                 {/* Journal Content */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label block text-sm font-medium mb-2">
                     Notes & Analysis
                   </label>
                   <textarea
@@ -511,29 +498,31 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                     onChange={(e) => setJournalData({ ...journalData, content: e.target.value })}
                     rows={4}
                     placeholder="What was your thought process? Why did you take this trade? What did you learn?"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   />
                 </div>
 
                 {/* Mood */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label block text-sm font-medium mb-2">
                     Mood
                   </label>
                   <select
                     value={journalData.mood}
                     onChange={(e) => setJournalData({ ...journalData, mood: e.target.value as any })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   >
-                    <option value="positive">😊 Positive</option>
-                    <option value="neutral">😐 Neutral</option>
-                    <option value="negative">😟 Negative</option>
+                    <option value="positive">Positive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="negative">Negative</option>
                   </select>
                 </div>
 
                 {/* Tags */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label block text-sm font-medium mb-2">
                     Tags (comma-separated)
                   </label>
                   <input
@@ -541,7 +530,8 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
                     value={journalData.tags}
                     onChange={(e) => setJournalData({ ...journalData, tags: e.target.value })}
                     placeholder="breakout, momentum, patience, etc."
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text)', borderColor: 'var(--border)' }}
                   />
                 </div>
               </div>
@@ -552,14 +542,15 @@ export default function AddTradeModal({ isOpen, onClose, onSuccess }: AddTradeMo
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition font-medium"
+                className="btn btn-brand flex-1 py-3 px-6 rounded-lg transition font-medium disabled:opacity-50"
               >
-                {loading ? 'Saving...' : '✓ Add Trade'}
+                {loading ? 'Saving...' : 'Add Trade'}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 px-6 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium"
+                className="flex-1 py-3 px-6 rounded-lg transition font-medium hover:opacity-80"
+                style={{ background: 'var(--bg-section)', color: 'var(--text)' }}
               >
                 Cancel
               </button>

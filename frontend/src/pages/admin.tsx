@@ -50,7 +50,6 @@ export default function AdminPage() {
       const data = await apiClient.getChatMessages(selectedUserId);
       setMessages(data);
     } catch (error: any) {
-      console.error('Failed to fetch messages:', error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +64,6 @@ export default function AdminPage() {
         setSelectedUserId(data[0].id);
       }
     } catch (error: any) {
-      console.error('Failed to fetch users:', error);
     }
   }, [selectedUserId]);
 
@@ -74,7 +72,6 @@ export default function AdminPage() {
       const data = await apiClient.getAdminStats();
       setStats(data);
     } catch (error: any) {
-      console.error('Failed to fetch stats:', error);
     } finally {
       setStatsLoading(false);
     }
@@ -120,7 +117,6 @@ export default function AdminPage() {
       // Refresh messages immediately after sending
       await fetchMessages();
     } catch (error: any) {
-      console.error('Failed to send message:', error);
       alert('Failed to send message. Please try again.');
       throw error;
     }
@@ -132,7 +128,6 @@ export default function AdminPage() {
       // Refresh messages after deletion
       await fetchMessages();
     } catch (error: any) {
-      console.error('Failed to delete message:', error);
       alert('Failed to delete message. Please try again.');
       throw error;
     }

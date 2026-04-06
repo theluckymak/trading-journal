@@ -23,7 +23,6 @@ export default function NewJournalEntry() {
       await apiClient.createJournalEntry(formData);
       router.push('/journal');
     } catch (error) {
-      console.error('Failed to create entry:', error);
       alert('Failed to create journal entry');
     } finally {
       setSubmitting(false);
@@ -90,11 +89,11 @@ export default function NewJournalEntry() {
                 onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
                 className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
-                <option value="excellent">😄 Excellent</option>
-                <option value="good">🙂 Good</option>
-                <option value="neutral">😐 Neutral</option>
-                <option value="bad">😟 Bad</option>
-                <option value="terrible">😢 Terrible</option>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="neutral">Neutral</option>
+                <option value="bad">Bad</option>
+                <option value="terrible">Terrible</option>
               </select>
             </div>
           </div>

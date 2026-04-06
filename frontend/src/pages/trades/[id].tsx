@@ -74,7 +74,6 @@ export default function TradeDetail() {
       await fetchJournal();
     } catch (err: any) {
       setError('Failed to load trade');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -98,7 +97,6 @@ export default function TradeDetail() {
         });
       }
     } catch (err) {
-      console.error('Failed to load journal:', err);
     }
   };
 
@@ -117,9 +115,6 @@ export default function TradeDetail() {
 
       const url = `https://dependable-solace-production-75f7.up.railway.app/api/journal/entries/${id}`;
       const method = 'POST';
-
-      console.log('Saving journal:', { url, payload, tradeId: id });
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -128,23 +123,18 @@ export default function TradeDetail() {
         },
         body: JSON.stringify(payload),
       });
-
-      console.log('Response status:', response.status);
-
       if (response.ok) {
         await fetchJournal();
         setEditingJournal(false);
         alert('Journal saved successfully!');
       } else {
         const errorData = await response.json();
-        console.error('Save error:', errorData);
         const errorMessage = typeof errorData.detail === 'string' 
           ? errorData.detail 
           : errorData.detail?.msg || errorData.message || JSON.stringify(errorData.detail) || 'Unknown error';
         alert(`Failed to save journal: ${errorMessage}\n\nIf this trade was created by another user, you cannot add a journal to it.`);
       }
     } catch (err: any) {
-      console.error('Error saving journal:', err);
       const errorMessage = err.message || 'Network error occurred';
       alert(`Failed to save journal: ${errorMessage}`);
     }
@@ -178,7 +168,6 @@ export default function TradeDetail() {
       router.push('/dashboard?deleted=true');
     } catch (err: any) {
       setError('Failed to delete trade');
-      console.error(err);
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -378,9 +367,9 @@ export default function TradeDetail() {
                   onChange={(e) => setJournalData({ ...journalData, mood: e.target.value as any })}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="positive">😊 Positive</option>
-                  <option value="neutral">😐 Neutral</option>
-                  <option value="negative">😟 Negative</option>
+                  <option value="positive">Positive</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="negative">Negative</option>
                 </select>
               </div>
 
@@ -399,7 +388,7 @@ export default function TradeDetail() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  📸 Setup Photo URL (optional)
+                  Setup Photo URL (optional)
                 </label>
                 <input
                   type="text"
@@ -410,7 +399,7 @@ export default function TradeDetail() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  📸 Trade Photo URL (optional)
+                  Trade Photo URL (optional)
                 </label>
                 <input
                   type="text"
@@ -461,9 +450,9 @@ export default function TradeDetail() {
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>Mood:</span>
                 <span className="font-medium">
-                  {journal?.emotional_state === 'positive' && '😊 Positive'}
-                  {journal?.emotional_state === 'neutral' && '😐 Neutral'}
-                  {journal?.emotional_state === 'negative' && '😟 Negative'}
+                  {journal?.emotional_state === 'positive' && 'Positive'}
+                  {journal?.emotional_state === 'neutral' && 'Neutral'}
+                  {journal?.emotional_state === 'negative' && 'Negative'}
                 </span>
               </div>
             </div>

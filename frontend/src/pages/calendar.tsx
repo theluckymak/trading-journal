@@ -62,7 +62,6 @@ export default function CalendarPage() {
       const data = await apiClient.getTrades({ limit: 1000 });
       setTrades(data);
     } catch (error) {
-      console.error('Failed to load trades:', error);
     } finally {
       setLoading(false);
     }
@@ -234,8 +233,8 @@ export default function CalendarPage() {
       <Layout>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <CalendarIcon className="h-12 w-12 text-blue-600 mx-auto animate-pulse" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading calendar...</p>
+            <CalendarIcon className="h-12 w-12 mx-auto animate-pulse" style={{ color: 'var(--brand)' }} />
+            <p className="mt-4" style={{ color: 'var(--text-muted)' }}>Loading calendar...</p>
           </div>
         </div>
       </Layout>
@@ -247,66 +246,66 @@ export default function CalendarPage() {
       <div className="p-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Trading Calendar</h1>
-          <p className="text-gray-600 dark:text-gray-400">View your trading activity over time</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>Trading Calendar</h1>
+          <p style={{ color: 'var(--text-muted)' }}>View your trading activity over time</p>
         </div>
 
         {/* Monthly Performance Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">P&L</div>
-            <div className={`text-lg font-bold ${monthlyStats.totalProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>P&L</div>
+            <div className="text-lg font-bold" style={{ color: monthlyStats.totalProfit >= 0 ? 'var(--success)' : 'var(--error)' }}>
               ${monthlyStats.totalProfit.toFixed(0)}
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Trades</div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{monthlyStats.totalTrades}</div>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Trades</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{monthlyStats.totalTrades}</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Rate</div>
-            <div className={`text-lg font-bold ${monthlyStats.winRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Win Rate</div>
+            <div className="text-lg font-bold" style={{ color: monthlyStats.winRate >= 50 ? 'var(--success)' : 'var(--warning)' }}>
               {monthlyStats.winRate.toFixed(1)}%
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Profit Factor</div>
-            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{monthlyStats.profitFactor.toFixed(2)}</div>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Profit Factor</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--brand)' }}>{monthlyStats.profitFactor.toFixed(2)}</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Expectancy</div>
-            <div className={`text-lg font-bold ${monthlyStats.expectancy >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Expectancy</div>
+            <div className="text-lg font-bold" style={{ color: monthlyStats.expectancy >= 0 ? 'var(--success)' : 'var(--error)' }}>
               ${monthlyStats.expectancy.toFixed(0)}
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Win</div>
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">${monthlyStats.avgWin.toFixed(0)}</div>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Avg Win</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--success)' }}>${monthlyStats.avgWin.toFixed(0)}</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Loss</div>
-            <div className="text-lg font-bold text-red-600 dark:text-red-400">${monthlyStats.avgLoss.toFixed(0)}</div>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Avg Loss</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--error)' }}>${monthlyStats.avgLoss.toFixed(0)}</div>
           </div>
         </div>
 
         {/* Calendar and Details */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar */}
-          <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6 overflow-x-auto">
+          <div className="lg:col-span-3 rounded-lg p-4 md:p-6 overflow-x-auto" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
             {/* Month Navigation */}
             <div className="flex items-center justify-between mb-6">
               <button
                 onClick={previousMonth}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                className="p-2 rounded-lg transition"
               >
-                <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <ChevronLeft className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
               </button>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{monthName}</h2>
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{monthName}</h2>
               <button
                 onClick={nextMonth}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                className="p-2 rounded-lg transition"
               >
-                <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <ChevronRight className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
               </button>
             </div>
 
@@ -317,12 +316,13 @@ export default function CalendarPage() {
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                   <div
                     key={day}
-                    className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 py-2"
+                    className="text-center text-sm font-semibold py-2"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {day}
                   </div>
                 ))}
-                <div className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 py-2">
+                <div className="text-center text-sm font-semibold py-2" style={{ color: 'var(--text-muted)' }}>
                   Weekly
                 </div>
               </div>
@@ -344,40 +344,44 @@ export default function CalendarPage() {
                       date.getMonth() === new Date().getMonth() &&
                       date.getFullYear() === new Date().getFullYear();
 
+                    const cellStyle: React.CSSProperties = hasActivity
+                      ? dayData.profit >= 0
+                        ? { borderColor: 'var(--success)', background: 'rgba(41,204,106,0.1)' }
+                        : { borderColor: 'var(--error)', background: 'rgba(255,45,85,0.1)' }
+                      : { borderColor: 'var(--border)', background: 'var(--bg-section)' };
+
+                    if (isToday) {
+                      cellStyle.boxShadow = '0 0 0 2px var(--brand)';
+                    }
+
                     return (
                       <button
                         key={day}
                         onClick={() => hasActivity && setSelectedDate(date)}
                         disabled={!dayData}
                         className={`relative aspect-square p-2 rounded-lg border-2 transition overflow-hidden ${
-                          hasActivity
-                            ? dayData.profit >= 0
-                              ? 'border-green-600 dark:border-green-500 bg-green-600/10 dark:bg-green-900/30 hover:bg-green-600/20 dark:hover:bg-green-900/40 cursor-pointer'
-                              : 'border-red-600 dark:border-red-500 bg-red-600/10 dark:bg-red-900/30 hover:bg-red-600/20 dark:hover:bg-red-900/40 cursor-pointer'
-                            : 'border-gray-300 dark:border-gray-700 bg-gray-800/20 cursor-default'
-                        } ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+                          hasActivity ? 'cursor-pointer' : 'cursor-default'
+                        }`}
+                        style={cellStyle}
                       >
-                        <div className="absolute top-1 left-1.5 text-[8px] xs:text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-400 dark:text-gray-500">
+                        <div className="absolute top-1 left-1.5 text-[8px] xs:text-[9px] sm:text-[10px] md:text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                           {day}
                         </div>
                         {dayData && (
                           <>
                             <div className="absolute inset-x-0 top-[30%] flex items-center justify-center">
                               <div
-                                className={`text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold leading-none ${
-                                  dayData.profit >= 0
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-red-600 dark:text-red-400'
-                                }`}
+                                className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold leading-none"
+                                style={{ color: dayData.profit >= 0 ? 'var(--success)' : 'var(--error)' }}
                               >
                                 {dayData.profit >= 0 ? '$' : '-$'}{Math.abs(dayData.profit).toFixed(0)}
                               </div>
                             </div>
                             <div className="absolute bottom-0.5 left-1 right-1 flex flex-col space-y-0">
-                              <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs text-gray-700 dark:text-gray-300 truncate">
+                              <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                                 {dayData.trades} {dayData.trades === 1 ? 'trade' : 'trades'}
                               </div>
-                              <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs text-blue-600 dark:text-blue-400">
+                              <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs" style={{ color: 'var(--brand)' }}>
                                 {dayData.rr >= 0 ? '+' : ''}{dayData.rr.toFixed(1)}R
                               </div>
                             </div>
@@ -388,20 +392,17 @@ export default function CalendarPage() {
                   })}
 
                   {/* Weekly Summary */}
-                  <div className="aspect-square bg-gray-700 dark:bg-gray-900 rounded-lg p-2 border-2 border-gray-600 dark:border-gray-700 overflow-hidden">
+                  <div className="aspect-square rounded-lg p-2 border-2 overflow-hidden" style={{ background: 'var(--bg-section)', borderColor: 'var(--border)' }}>
                     <div className="flex flex-col items-center justify-center h-full space-y-1">
-                      <div className="text-[8px] xs:text-[9px] sm:text-[10px] md:text-xs text-gray-400 mb-1">Week {week.weekData.weekNum}</div>
+                      <div className="text-[8px] xs:text-[9px] sm:text-[10px] md:text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Week {week.weekData.weekNum}</div>
                       <div
-                        className={`text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold leading-none ${
-                          week.weekData.profit >= 0
-                            ? 'text-green-400'
-                            : 'text-red-400'
-                        }`}
+                        className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold leading-none"
+                        style={{ color: week.weekData.profit >= 0 ? 'var(--success)' : 'var(--error)' }}
                       >
                         {week.weekData.profit >= 0 ? '$' : '-$'}
                         {Math.abs(week.weekData.profit).toFixed(0)}
                       </div>
-                      <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs text-blue-400 mt-1">
+                      <div className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs mt-1" style={{ color: 'var(--brand)' }}>
                         {week.weekData.daysTraded} day{week.weekData.daysTraded !== 1 ? 's' : ''}
                       </div>
                     </div>
@@ -412,8 +413,8 @@ export default function CalendarPage() {
           </div>
 
           {/* Selected Date Details - Sidebar */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="rounded-lg p-6" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow)' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
               {selectedDate
                 ? selectedDate.toLocaleDateString('en-US', {
                     month: 'long',
@@ -426,21 +427,18 @@ export default function CalendarPage() {
             {selectedDate && selectedDateTrades.length > 0 ? (
               <div className="space-y-4">
                 {/* Summary */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Profit</div>
+                <div className="rounded-lg p-4" style={{ background: 'var(--bg-section)' }}>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Total Profit</div>
                   <div
-                    className={`text-2xl font-bold ${
-                      selectedDayData && selectedDayData.profit >= 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}
+                    className="text-2xl font-bold"
+                    style={{ color: selectedDayData && selectedDayData.profit >= 0 ? 'var(--success)' : 'var(--error)' }}
                   >
                     {new Intl.NumberFormat('en-US', {
                       style: 'currency',
                       currency: 'USD',
                     }).format(selectedDayData?.profit || 0)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
                     {selectedDateTrades.length} trade{selectedDateTrades.length !== 1 ? 's' : ''}
                   </div>
                 </div>
@@ -451,18 +449,16 @@ export default function CalendarPage() {
                     <button
                       key={trade.id}
                       onClick={() => router.push(`/trades/${trade.id}`)}
-                      className="w-full text-left p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                      className="w-full text-left p-3 rounded-lg transition"
+                      style={{ background: 'var(--bg-section)' }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium" style={{ color: 'var(--text)' }}>
                           {trade.symbol}
                         </span>
                         <span
-                          className={`flex items-center gap-1 text-sm ${
-                            trade.trade_type.toLowerCase() === 'buy'
-                              ? 'text-green-600 dark:text-green-400'
-                              : 'text-red-600 dark:text-red-400'
-                          }`}
+                          className="flex items-center gap-1 text-sm"
+                          style={{ color: trade.trade_type.toLowerCase() === 'buy' ? 'var(--success)' : 'var(--error)' }}
                         >
                           {trade.trade_type.toLowerCase() === 'buy' ? (
                             <TrendingUp className="h-4 w-4" />
@@ -473,11 +469,8 @@ export default function CalendarPage() {
                         </span>
                       </div>
                       <div
-                        className={`text-sm font-medium ${
-                          (trade.net_profit || 0) >= 0
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}
+                        className="text-sm font-medium"
+                        style={{ color: (trade.net_profit || 0) >= 0 ? 'var(--success)' : 'var(--error)' }}
                       >
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
@@ -489,11 +482,11 @@ export default function CalendarPage() {
                 </div>
               </div>
             ) : selectedDate ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
                 No trades on this date
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
                 Click on a date to view trades
               </div>
             )}

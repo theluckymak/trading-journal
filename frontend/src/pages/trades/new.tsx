@@ -59,13 +59,8 @@ export default function NewTrade() {
         take_profit: null,
         profit: null,
       };
-
-      console.log('Submitting trade data:', tradeData);
-      
       // Get access token from localStorage
       let accessToken = localStorage.getItem('accessToken');
-      console.log('[DEBUG] Access token from localStorage:', accessToken ? `${accessToken.substring(0, 50)}...` : 'NULL');
-      
       if (!accessToken) {
         setError('Not authenticated. Please log in again.');
         return;
@@ -80,13 +75,8 @@ export default function NewTrade() {
         },
         body: JSON.stringify(tradeData),
       });
-
-      console.log('[DEBUG] Response status:', response.status);
-      console.log('[DEBUG] Response ok:', response.ok);
-
       // If 401, try to refresh token and retry
       if (response.status === 401) {
-        console.log('[DEBUG] Token expired, attempting refresh...');
         const refreshToken = localStorage.getItem('refreshToken');
         
         if (refreshToken) {
@@ -103,8 +93,6 @@ export default function NewTrade() {
               const refreshData = await refreshResponse.json();
               const newAccessToken = refreshData.access_token;
               localStorage.setItem('accessToken', newAccessToken);
-              console.log('[DEBUG] Token refreshed successfully, retrying request...');
-
               // Retry the trade creation with new token
               response = await fetch('https://dependable-solace-production-75f7.up.railway.app/api/trades', {
                 method: 'POST',
@@ -114,15 +102,12 @@ export default function NewTrade() {
                 },
                 body: JSON.stringify(tradeData),
               });
-              console.log('[DEBUG] Retry response status:', response.status);
             } else {
-              console.error('[DEBUG] Token refresh failed');
               setError('Session expired. Please log in again.');
               setTimeout(() => router.push('/login'), 2000);
               return;
             }
           } catch (refreshError) {
-            console.error('[DEBUG] Token refresh error:', refreshError);
             setError('Session expired. Please log in again.');
             setTimeout(() => router.push('/login'), 2000);
             return;
@@ -136,8 +121,6 @@ export default function NewTrade() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
-        
         const detail = errorData.detail;
         if (Array.isArray(detail)) {
           const errorMessages = detail.map((e: any) => `${e.loc?.join(' → ') || 'Field'}: ${e.msg}`).join(', ');
@@ -151,7 +134,6 @@ export default function NewTrade() {
       }
 
       const result = await response.json();
-      console.log('Trade created successfully:', result);
       setSuccess(true);
       
       // Show success message then redirect
@@ -159,8 +141,6 @@ export default function NewTrade() {
         router.push('/dashboard');
       }, 1500);
     } catch (err: any) {
-      console.error('Trade creation error:', err);
-      
       if (err.message) {
         setError(`Error: ${err.message}`);
       } else {
@@ -208,7 +188,7 @@ export default function NewTrade() {
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                💱 Forex
+                Forex
               </button>
               <button
                 type="button"
@@ -222,7 +202,7 @@ export default function NewTrade() {
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                📈 Futures
+                Futures
               </button>
               <button
                 type="button"
@@ -391,7 +371,7 @@ export default function NewTrade() {
                   disabled={loading}
                   className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition font-medium text-base"
                 >
-                  {loading ? 'Saving...' : '✓ Add Trade'}
+                  {loading ? 'Saving...' : 'Add Trade'}
                 </button>
                 <button
                   type="button"

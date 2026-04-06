@@ -63,7 +63,6 @@ export default function TradesPage() {
       const data = await apiClient.getTrades({ limit: 1000 });
       setTrades(data);
     } catch (error) {
-      console.error('Failed to load trades:', error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +113,6 @@ export default function TradesPage() {
       await apiClient.deleteTrade(id);
       setTrades(trades.filter((t) => t.id !== id));
     } catch (error) {
-      console.error('Failed to delete trade:', error);
       alert('Failed to delete trade');
     }
   };
@@ -142,8 +140,8 @@ export default function TradesPage() {
       <Layout>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <TrendingUp className="h-12 w-12 text-blue-600 mx-auto animate-pulse" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading trades...</p>
+            <TrendingUp className="h-12 w-12 mx-auto animate-pulse" style={{ color: 'var(--brand)' }} />
+            <p className="mt-4" style={{ color: 'var(--text-muted)' }}>Loading trades...</p>
           </div>
         </div>
       </Layout>
@@ -155,51 +153,51 @@ export default function TradesPage() {
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Trades</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>Trades</h1>
+          <p style={{ color: 'var(--text-muted)' }}>
             Manage and analyze your trading history
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Trades</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{trades.length}</p>
+          <div className="card p-6">
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Total Trades</p>
+            <p className="text-2xl font-bold mt-2" style={{ color: 'var(--text)' }}>{trades.length}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Open Trades</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+          <div className="card p-6">
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Open Trades</p>
+            <p className="text-2xl font-bold mt-2" style={{ color: 'var(--brand)' }}>
               {trades.filter((t) => !t.is_closed).length}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Winning Trades</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">
+          <div className="card p-6">
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Winning Trades</p>
+            <p className="text-2xl font-bold mt-2" style={{ color: 'var(--success)' }}>
               {trades.filter((t) => t.is_closed && (t.net_profit || 0) > 0).length}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Losing Trades</p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-2">
+          <div className="card p-6">
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Losing Trades</p>
+            <p className="text-2xl font-bold mt-2" style={{ color: 'var(--error)' }}>
               {trades.filter((t) => t.is_closed && (t.net_profit || 0) < 0).length}
             </p>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div className="card p-6 mb-6">
           <div className="flex flex-wrap gap-4">
             {/* Search */}
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: 'var(--text-muted)' }} />
                 <input
                   type="text"
                   placeholder="Search trades..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="input w-full pl-10 pr-4 py-2"
                 />
               </div>
             </div>
@@ -208,7 +206,7 @@ export default function TradesPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as any)}
-              className="px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="input px-4 py-2"
             >
               <option value="all">All Trades</option>
               <option value="buy">Buy Only</option>
@@ -221,7 +219,7 @@ export default function TradesPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="input px-4 py-2"
             >
               <option value="date">Sort by Date</option>
               <option value="profit">Sort by Profit</option>
@@ -231,7 +229,7 @@ export default function TradesPage() {
             {/* New Trade Button */}
             <button
               onClick={() => router.push('/trades/new')}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="btn btn-brand flex items-center gap-2"
             >
               <Plus className="h-5 w-5" />
               New Trade
@@ -240,41 +238,41 @@ export default function TradesPage() {
         </div>
 
         {/* Trades Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="overflow-hidden" style={{ background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead style={{ background: 'var(--bg-section)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Symbol
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Open Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Close Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Volume
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Profit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y dark:divide-gray-700">
+              <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
                 {filteredTrades.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={8} className="px-6 py-12 text-center" style={{ color: 'var(--text-muted)' }}>
                       No trades found. Create your first trade to get started!
                     </td>
                   </tr>
@@ -282,20 +280,22 @@ export default function TradesPage() {
                   filteredTrades.map((trade) => (
                     <tr
                       key={trade.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      className="transition"
+                      style={{ borderColor: 'var(--border)' }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium" style={{ color: 'var(--text)' }}>
                           {trade.symbol}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          style={
                             trade.trade_type.toLowerCase() === 'buy'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                          }`}
+                              ? { background: 'color-mix(in srgb, var(--success) 15%, transparent)', color: 'var(--success)' }
+                              : { background: 'color-mix(in srgb, var(--error) 15%, transparent)', color: 'var(--error)' }
+                          }
                         >
                           {trade.trade_type.toLowerCase() === 'buy' ? (
                             <TrendingUp className="h-3 w-3" />
@@ -305,33 +305,33 @@ export default function TradesPage() {
                           {trade.trade_type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text)' }}>
                         {formatDate(trade.open_time)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text)' }}>
                         {trade.close_time ? formatDate(trade.close_time) : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text)' }}>
                         {trade.volume}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`font-medium ${
-                            (trade.net_profit || 0) >= 0
-                              ? 'text-green-600 dark:text-green-400'
-                              : 'text-red-600 dark:text-red-400'
-                          }`}
+                          className="font-medium"
+                          style={{
+                            color: (trade.net_profit || 0) >= 0 ? 'var(--success)' : 'var(--error)',
+                          }}
                         >
                           {formatCurrency(trade.net_profit)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          style={
                             trade.is_closed
-                              ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                          }`}
+                              ? { background: 'var(--bg-section)', color: 'var(--text-muted)' }
+                              : { background: 'color-mix(in srgb, var(--brand) 15%, transparent)', color: 'var(--brand)' }
+                          }
                         >
                           {trade.is_closed ? 'Closed' : 'Open'}
                         </span>
@@ -340,21 +340,24 @@ export default function TradesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => router.push(`/trades/${trade.id}`)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                            className="p-2 rounded-lg transition"
+                            style={{ color: 'var(--brand)' }}
                             title="View"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => router.push(`/trades/edit/${trade.id}`)}
-                            className="p-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
+                            className="p-2 rounded-lg transition"
+                            style={{ color: 'var(--text-muted)' }}
                             title="Edit"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(trade.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                            className="p-2 rounded-lg transition"
+                            style={{ color: 'var(--error)' }}
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />
